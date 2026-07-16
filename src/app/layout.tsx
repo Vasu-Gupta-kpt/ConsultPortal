@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "IIMC Consult Club",
   description: "IIM Calcutta Consulting Club — Case Library, Peer Practice, and Learning Materials",
+  verification: {
+    // Google Search Console — proves control over the homepage URL for the
+    // OAuth consent screen verification review.
+    google: "Wbi_ooxII2LtjCW0aMgpozJFm1DjWDC5vVLhn0eUKEg",
+  },
 };
 
 export default function RootLayout({
