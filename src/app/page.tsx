@@ -68,13 +68,14 @@ export default function HomePage() {
             <Image src="/logo.jpeg" alt="IIM Calcutta Consult Club" width={140} height={140} className="drop-shadow-lg" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-            Your Consulting
+            IIMC Consult Club
             <br />
-            Prep Platform
+            Your Consulting Prep Platform
           </h1>
           <p className="text-lg text-white/80 max-w-xl mx-auto mb-8">
-            Practice cases, learn from seniors, and book mock interviews — everything you need to
-            crack MBB and Big 4 interviews, all in one place.
+            IIMC Consult Club is a case-interview prep platform built by and for IIM Calcutta
+            Consulting Club students. Practice cases, learn from seniors, and book mock
+            interviews — everything you need to crack MBB and Big 4 interviews, all in one place.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link
@@ -174,6 +175,35 @@ export default function HomePage() {
               View Dashboard
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* About */}
+      <section className="border-t border-border">
+        <div className="container mx-auto px-4 py-14 max-w-2xl">
+          <h2 className="text-xl font-bold mb-3">About IIMC Consult Club</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+            IIMC Consult Club is a student-built, student-run web application for IIM Calcutta
+            Consulting Club members preparing for case-interview placements. It is not affiliated
+            with any commercial entity. Sign-in is restricted to <code>@iimcal.ac.in</code> and{" "}
+            <code>@email.iimcal.ac.in</code> Google accounts.
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+            We use Google Sign-In to verify your identity and pull your name, email, and profile
+            photo. Separately, and only if you explicitly click &quot;Connect Google Calendar&quot;
+            on your profile page, we request the narrower{" "}
+            <code>https://www.googleapis.com/auth/calendar.events</code> scope to create a calendar
+            event when a Peer Practice session you host is accepted, and to remove it if the
+            session is cancelled — we never read your existing calendar, and this permission is
+            never requested as part of ordinary sign-in.
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            See our full{" "}
+            <Link href="/privacy" className="text-primary underline">
+              Privacy Policy
+            </Link>{" "}
+            for details on what we collect and how it&apos;s used.
+          </p>
         </div>
       </section>
     </div>
