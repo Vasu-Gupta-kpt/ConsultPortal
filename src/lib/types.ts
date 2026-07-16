@@ -66,6 +66,7 @@ export interface ProfileRow {
   contact_number: string | null;
   room_number: string | null;
   google_calendar_connected: boolean;
+  is_admin: boolean;
   tags: string[];
   rating: number | null;
   review_count: number;

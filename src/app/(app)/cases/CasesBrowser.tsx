@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,13 @@ const difficultyColors: Record<Difficulty, string> = {
   Hard: "text-red-600 bg-red-50 border-red-200",
 };
 
-export default function CasesBrowser({ cases }: { cases: CaseListItem[] }) {
+export default function CasesBrowser({
+  cases,
+  isAdmin,
+}: {
+  cases: CaseListItem[];
+  isAdmin: boolean;
+}) {
   const [search, setSearch] = useState("");
   const [selectedDifficulties, setSelectedDifficulties] = useState<Difficulty[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<CaseType[]>([]);
@@ -81,11 +87,18 @@ export default function CasesBrowser({ cases }: { cases: CaseListItem[] }) {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">Case Library</h1>
-        <p className="text-muted-foreground text-sm">
-          {filtered.length} of {cases.length} cases
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Case Library</h1>
+          <p className="text-muted-foreground text-sm">
+            {filtered.length} of {cases.length} cases
+          </p>
+        </div>
+        {isAdmin && (
+          <Link href="/cases/new" className={buttonVariants({ size: "sm" })}>
+            Add Case
+          </Link>
+        )}
       </div>
 
       {/* Search + filter toggle */}

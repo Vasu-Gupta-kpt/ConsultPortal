@@ -393,6 +393,7 @@ export type Database = {
           google_calendar_connected: boolean
           hostel: Database["public"]["Enums"]["hostel"] | null
           id: string
+          is_admin: boolean
           rating: number | null
           review_count: number
           room_number: string | null
@@ -411,6 +412,7 @@ export type Database = {
           google_calendar_connected?: boolean
           hostel?: Database["public"]["Enums"]["hostel"] | null
           id: string
+          is_admin?: boolean
           rating?: number | null
           review_count?: number
           room_number?: string | null
@@ -429,6 +431,7 @@ export type Database = {
           google_calendar_connected?: boolean
           hostel?: Database["public"]["Enums"]["hostel"] | null
           id?: string
+          is_admin?: boolean
           rating?: number | null
           review_count?: number
           room_number?: string | null

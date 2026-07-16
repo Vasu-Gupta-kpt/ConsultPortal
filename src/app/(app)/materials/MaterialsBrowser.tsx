@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { Download, Search, FileText, Video, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { downloadMaterial } from "@/lib/actions/materials";
@@ -25,7 +26,13 @@ const fileTypeIcon: Record<MaterialRow["file_type"], typeof FileText> = {
   Article: BookOpen,
 };
 
-export default function MaterialsBrowser({ materials }: { materials: MaterialListItem[] }) {
+export default function MaterialsBrowser({
+  materials,
+  isAdmin,
+}: {
+  materials: MaterialListItem[];
+  isAdmin: boolean;
+}) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -59,11 +66,18 @@ export default function MaterialsBrowser({ materials }: { materials: MaterialLis
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">Learning Materials</h1>
-        <p className="text-muted-foreground text-sm">
-          Frameworks, industry notes, casebooks, and skill guides curated by the club.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Learning Materials</h1>
+          <p className="text-muted-foreground text-sm">
+            Frameworks, industry notes, casebooks, and skill guides curated by the club.
+          </p>
+        </div>
+        {isAdmin && (
+          <Link href="/materials/new" className={buttonVariants({ size: "sm" })}>
+            Add Material
+          </Link>
+        )}
       </div>
 
       {/* Search */}

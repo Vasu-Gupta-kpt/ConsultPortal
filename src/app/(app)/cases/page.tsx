@@ -8,13 +8,16 @@ export default async function CasesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: cases, error: casesError }, { data: solvedCounts }, { data: ownSolves }] =
+  const [{ data: cases, error: casesError }, { data: solvedCounts }, { data: ownSolves }, { data: profile }] =
     await Promise.all([
       supabase.from("cases").select("*").order("created_at", { ascending: false }),
       supabase.rpc("case_solved_counts"),
       user
         ? supabase.from("case_solves").select("case_id").eq("user_id", user.id)
         : Promise.resolve({ data: [] as { case_id: string }[] }),
+      user
+        ? supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+        : Promise.resolve({ data: null }),
     ]);
 
   if (casesError) {
@@ -37,5 +40,5 @@ export default async function CasesPage() {
     isSolved: ownSolvedCaseIds.has(c.id),
   }));
 
-  return <CasesBrowser cases={items} />;
+  return <CasesBrowser cases={items} isAdmin={profile?.is_admin ?? false} />;
 }

@@ -27,6 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { requestBooking } from "@/lib/actions/peer-practice";
 import type { SlotLocation } from "@/lib/types";
 import { cn, formatDateLabel, parseDateInputValue, toDateInputValue } from "@/lib/utils";
+import AddSlotButton from "./AddSlotButton";
 
 export type PeerSlot = {
   id: string;
@@ -189,11 +190,14 @@ export default function PeerPracticeBrowser({ students }: { students: PeerListIt
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">Peer Practice</h1>
-        <p className="text-muted-foreground text-sm">
-          Find batchmates and seniors to practice mock case interviews.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Peer Practice</h1>
+          <p className="text-muted-foreground text-sm">
+            Find batchmates and seniors to practice mock case interviews.
+          </p>
+        </div>
+        <AddSlotButton />
       </div>
 
       {/* Filters */}
