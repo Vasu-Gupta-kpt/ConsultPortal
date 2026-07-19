@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { CaseType, Difficulty, FileType, Industry, MaterialCategory } from "@/lib/types";
+import { parseFrameworkTree } from "@/lib/framework-tree";
+import type { CaseType, ConversationTurn, Difficulty, FileType, Industry, MaterialCategory } from "@/lib/types";
 
 export type AdminFormState = { error: string } | null;
 
@@ -12,6 +13,29 @@ function splitList(value: string): string[] {
     .split(",")
     .map((v) => v.trim())
     .filter(Boolean);
+}
+
+function splitLines(value: string): string[] {
+  return value
+    .split("\n")
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+function parseConversation(value: string): ConversationTurn[] {
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (turn): turn is ConversationTurn =>
+        turn &&
+        (turn.speaker === "candidate" || turn.speaker === "interviewer") &&
+        typeof turn.text === "string" &&
+        turn.text.trim().length > 0
+    );
+  } catch {
+    return [];
+  }
 }
 
 // Authorization is enforced entirely by RLS (see
@@ -38,6 +62,12 @@ export async function createCase(
   const description = String(formData.get("description") ?? "").trim();
   const estimatedTime = Number(formData.get("estimated_time"));
   const tags = splitList(String(formData.get("tags") ?? ""));
+  const caseFacts = splitLines(String(formData.get("case_facts") ?? ""));
+  const additionalInfo = splitLines(String(formData.get("additional_info") ?? ""));
+  const recommendations = splitLines(String(formData.get("recommendations") ?? ""));
+  const tips = splitLines(String(formData.get("tips") ?? ""));
+  const conversation = parseConversation(String(formData.get("conversation") ?? "[]"));
+  const frameworkTree = parseFrameworkTree(String(formData.get("framework_tree_text") ?? ""));
 
   if (!title || !company || !description) {
     return { error: "Please fill in title, company, and description." };
@@ -57,6 +87,12 @@ export async function createCase(
     description,
     estimated_time: estimatedTime,
     tags,
+    case_facts: caseFacts,
+    additional_info: additionalInfo,
+    conversation,
+    framework_tree: frameworkTree,
+    recommendations,
+    tips,
     created_by: user.id,
   });
 

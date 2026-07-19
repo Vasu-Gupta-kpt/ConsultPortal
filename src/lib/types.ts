@@ -74,6 +74,14 @@ export interface ProfileRow {
   updated_at: string;
 }
 
+export type ConversationTurn = { speaker: "candidate" | "interviewer"; text: string };
+
+export type FrameworkNode = {
+  label: string;
+  explored?: boolean;
+  children?: FrameworkNode[];
+};
+
 export interface CaseRow {
   id: string;
   title: string;
@@ -86,6 +94,12 @@ export interface CaseRow {
   description: string;
   estimated_time: number;
   tags: string[];
+  case_facts: string[];
+  additional_info: string[];
+  conversation: ConversationTurn[];
+  framework_tree: FrameworkNode | null;
+  recommendations: string[];
+  tips: string[];
   created_by: string | null;
   created_at: string;
 }

@@ -6,8 +6,6 @@ import {
   ArrowLeft,
   Clock,
   Building2,
-  ChevronDown,
-  ChevronUp,
   ThumbsUp,
   MessageSquare,
   BookOpen,
@@ -20,7 +18,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import type { CaseCommentRow, CaseRow, Difficulty } from "@/lib/types";
+import type { CaseCommentRow, CaseRow, ConversationTurn, Difficulty, FrameworkNode } from "@/lib/types";
 import { postApproach, toggleCaseSolved, toggleUpvote } from "@/lib/actions/cases";
 
 export type CommentItem = CaseCommentRow & { upvotes: number; isUpvoted: boolean };
@@ -44,7 +42,6 @@ export default function CaseDetailView({
 }) {
   const [isSolved, setIsSolved] = useState(initialIsSolved);
   const [comments, setComments] = useState(initialComments);
-  const [showHint, setShowHint] = useState(false);
   const [newApproach, setNewApproach] = useState("");
   const [newContent, setNewContent] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -144,6 +141,8 @@ export default function CaseDetailView({
           <Tabs defaultValue="case">
             <TabsList>
               <TabsTrigger value="case">Case</TabsTrigger>
+              <TabsTrigger value="conversation">Conversation</TabsTrigger>
+              <TabsTrigger value="structure">Structure</TabsTrigger>
               <TabsTrigger value="approaches">
                 Approaches
                 <span className="ml-1.5 bg-primary/10 text-primary text-xs rounded-full px-1.5">
@@ -165,38 +164,19 @@ export default function CaseDetailView({
                 </CardContent>
               </Card>
 
-              {/* Hint toggle */}
-              <Card>
-                <CardContent className="p-4">
-                  <button
-                    className="flex items-center justify-between w-full text-sm font-medium"
-                    onClick={() => setShowHint(!showHint)}
-                  >
-                    <span>Suggested Framework</span>
-                    {showHint ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </button>
-                  {showHint && (
-                    <div className="mt-3 pt-3 border-t space-y-1.5">
-                      {caseData.framework.map((f) => (
-                        <div key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <div className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                          {f}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
               {/* Mark solved */}
               <Button onClick={handleToggleSolved} variant={isSolved ? "outline" : "default"} className="w-full gap-2">
                 <CheckCircle2 className="h-4 w-4" />
                 {isSolved ? "Mark as Unsolved" : "Mark as Solved"}
               </Button>
+            </TabsContent>
+
+            <TabsContent value="conversation" className="mt-4">
+              <ConversationView turns={caseData.conversation} />
+            </TabsContent>
+
+            <TabsContent value="structure" className="mt-4">
+              <StructureView caseData={caseData} />
             </TabsContent>
 
             <TabsContent value="approaches" className="mt-4 space-y-4">
@@ -337,6 +317,148 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between text-sm">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-medium">{value}</span>
+    </div>
+  );
+}
+
+function ConversationView({ turns }: { turns: ConversationTurn[] }) {
+  if (turns.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-30" />
+        <p className="text-sm">No scripted conversation for this case yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {turns.map((turn, i) => (
+        <div
+          key={i}
+          className={cn(
+            "rounded-lg px-4 py-3 text-sm leading-relaxed max-w-[85%]",
+            turn.speaker === "interviewer"
+              ? "bg-primary text-primary-foreground ml-auto"
+              : "bg-muted text-foreground"
+          )}
+        >
+          <p className="text-xs font-semibold mb-1 opacity-70 capitalize">{turn.speaker}</p>
+          {turn.text}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FrameworkTreeView({ node, depth = 0 }: { node: FrameworkNode; depth?: number }) {
+  return (
+    <div className={depth > 0 ? "ml-4 border-l border-border pl-4" : ""}>
+      {node.label && (
+        <div
+          className={cn(
+            "inline-block rounded-md px-2.5 py-1 text-sm font-medium mb-1.5",
+            node.explored ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+          )}
+        >
+          {node.label}
+        </div>
+      )}
+      {node.children?.map((child, i) => (
+        <FrameworkTreeView key={i} node={child} depth={depth + 1} />
+      ))}
+    </div>
+  );
+}
+
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-2 text-sm text-foreground leading-relaxed">
+          <div className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0 mt-1.5" />
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function StructureView({ caseData }: { caseData: CaseRow }) {
+  const hasFacts = caseData.case_facts.length > 0 || caseData.additional_info.length > 0;
+
+  return (
+    <div className="grid lg:grid-cols-3 gap-4">
+      {hasFacts && (
+        <div className="lg:col-span-1 space-y-4">
+          {caseData.case_facts.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Case Facts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BulletList items={caseData.case_facts} />
+              </CardContent>
+            </Card>
+          )}
+          {caseData.additional_info.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Additional Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BulletList items={caseData.additional_info} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      <div className={cn("space-y-4", hasFacts ? "lg:col-span-2" : "lg:col-span-3")}>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Structure / Framework</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {caseData.framework_tree ? (
+              <FrameworkTreeView node={caseData.framework_tree} />
+            ) : caseData.framework.length > 0 ? (
+              <div className="space-y-1.5">
+                {caseData.framework.map((f) => (
+                  <div key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                    {f}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No framework added for this case yet.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {caseData.recommendations.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Recommendations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BulletList items={caseData.recommendations} />
+            </CardContent>
+          </Card>
+        )}
+
+        {caseData.tips.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Tips / Tricks</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BulletList items={caseData.tips} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

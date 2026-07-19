@@ -219,47 +219,65 @@ export type Database = {
       }
       cases: {
         Row: {
+          additional_info: string[]
+          case_facts: string[]
           casebook: string | null
           company: string
+          conversation: Json
           created_at: string
           created_by: string | null
           description: string
           difficulty: Database["public"]["Enums"]["difficulty"]
           estimated_time: number
           framework: string[]
+          framework_tree: Json | null
           id: string
           industry: Database["public"]["Enums"]["industry"]
+          recommendations: string[]
           tags: string[]
+          tips: string[]
           title: string
           type: Database["public"]["Enums"]["case_type"]
         }
         Insert: {
+          additional_info?: string[]
+          case_facts?: string[]
           casebook?: string | null
           company: string
+          conversation?: Json
           created_at?: string
           created_by?: string | null
           description: string
           difficulty: Database["public"]["Enums"]["difficulty"]
           estimated_time: number
           framework?: string[]
+          framework_tree?: Json | null
           id?: string
           industry: Database["public"]["Enums"]["industry"]
+          recommendations?: string[]
           tags?: string[]
+          tips?: string[]
           title: string
           type: Database["public"]["Enums"]["case_type"]
         }
         Update: {
+          additional_info?: string[]
+          case_facts?: string[]
           casebook?: string | null
           company?: string
+          conversation?: Json
           created_at?: string
           created_by?: string | null
           description?: string
           difficulty?: Database["public"]["Enums"]["difficulty"]
           estimated_time?: number
           framework?: string[]
+          framework_tree?: Json | null
           id?: string
           industry?: Database["public"]["Enums"]["industry"]
+          recommendations?: string[]
           tags?: string[]
+          tips?: string[]
           title?: string
           type?: Database["public"]["Enums"]["case_type"]
         }
