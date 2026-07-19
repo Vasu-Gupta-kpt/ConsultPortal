@@ -374,13 +374,17 @@ function FrameworkBox({ node }: { node: FrameworkNode }) {
   return (
     <div
       className={cn(
-        "flex h-14 w-32 items-center justify-center rounded-md px-2 text-center text-xs font-medium leading-snug line-clamp-3",
+        "flex h-14 w-32 items-center justify-center rounded-md px-2",
         node.explored
           ? "bg-primary text-primary-foreground"
           : "bg-muted text-muted-foreground border border-border"
       )}
     >
-      {node.label}
+      {/* line-clamp sets display:-webkit-box, which would otherwise clobber
+          the parent's flex centering if applied on the same element. */}
+      <span className="line-clamp-3 text-center text-xs font-medium leading-snug">
+        {node.label}
+      </span>
     </div>
   );
 }
@@ -466,7 +470,7 @@ function StructureCard({ structure, index, total }: { structure: CaseStructure; 
       </CardContent>
 
       <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-auto">
+        <DialogContent className="w-[98vw] h-[95vh] max-w-[98vw] max-h-[95vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
