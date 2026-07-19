@@ -478,7 +478,7 @@ function StructureCard({ structure, index, total }: { structure: CaseStructure; 
       </CardContent>
 
       <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
-        <DialogContent className="w-[98vw] h-[95vh] max-w-[98vw] max-h-[95vh] overflow-auto">
+        <DialogContent className="w-[98vw] h-[95vh] max-w-[98vw] sm:max-w-[98vw] max-h-[95vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
