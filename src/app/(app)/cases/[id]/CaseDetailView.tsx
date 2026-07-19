@@ -351,23 +351,54 @@ function ConversationView({ turns }: { turns: ConversationTurn[] }) {
   );
 }
 
-function FrameworkTreeView({ node, depth = 0 }: { node: FrameworkNode; depth?: number }) {
+// Horizontal box-and-line org chart, matching the source casebook's layout
+// (branch nodes as solid boxes -- red if explored, gray if not; leaf detail
+// nodes as small outlined chips when explored). Connector lines are drawn
+// by the .framework-org-chart CSS in globals.css using the classic nested
+// <ul>/<li> technique -- no charting library needed.
+function FrameworkTreeView({ node }: { node: FrameworkNode }) {
   return (
-    <div className={depth > 0 ? "ml-4 border-l border-border pl-4" : ""}>
+    <div className="overflow-x-auto py-2">
+      <ul className="framework-org-chart min-w-max">
+        <FrameworkTreeNode node={node} />
+      </ul>
+    </div>
+  );
+}
+
+function FrameworkTreeNode({ node }: { node: FrameworkNode }) {
+  const hasChildren = (node.children?.length ?? 0) > 0;
+
+  return (
+    <li>
       {node.label && (
         <div
           className={cn(
-            "inline-block rounded-md px-2.5 py-1 text-sm font-medium mb-1.5",
-            node.explored ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            "max-w-[140px] rounded-md text-center leading-snug",
+            hasChildren
+              ? cn(
+                  "px-3 py-2 text-xs font-medium",
+                  node.explored ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                )
+              : cn(
+                  "px-2.5 py-1.5 text-xs",
+                  node.explored
+                    ? "border-2 border-primary bg-background text-foreground"
+                    : "bg-muted text-muted-foreground"
+                )
           )}
         >
           {node.label}
         </div>
       )}
-      {node.children?.map((child, i) => (
-        <FrameworkTreeView key={i} node={child} depth={depth + 1} />
-      ))}
-    </div>
+      {hasChildren && (
+        <ul>
+          {node.children!.map((child, i) => (
+            <FrameworkTreeNode key={i} node={child} />
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }
 

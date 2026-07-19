@@ -136,4 +136,66 @@
   .card-hover {
     @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
   }
+
+  /* Pure-CSS horizontal org-chart connector lines for the case Structure
+     tab's framework tree (src/app/(app)/cases/[id]/CaseDetailView.tsx).
+     Standard nested <ul>/<li> "family tree" technique: each <li> draws a
+     horizontal half-line via ::before/::after, nested <ul>s draw the
+     vertical drop from their parent box. */
+  .framework-org-chart,
+  .framework-org-chart ul {
+    display: flex;
+    justify-content: center;
+    position: relative;
+  }
+  .framework-org-chart li {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem 0.75rem 0 0.75rem;
+    position: relative;
+  }
+  .framework-org-chart li::before,
+  .framework-org-chart li::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 50%;
+    width: 50%;
+    height: 1.25rem;
+    border-top: 2px solid var(--border);
+  }
+  .framework-org-chart li::after {
+    right: auto;
+    left: 50%;
+    border-left: 2px solid var(--border);
+  }
+  .framework-org-chart li:only-child::before,
+  .framework-org-chart li:only-child::after {
+    display: none;
+  }
+  .framework-org-chart li:only-child {
+    padding-top: 0;
+  }
+  .framework-org-chart li:first-child::before,
+  .framework-org-chart li:last-child::after {
+    border: 0 none;
+  }
+  .framework-org-chart li:last-child::before {
+    border-right: 2px solid var(--border);
+    border-radius: 0 0.5rem 0 0;
+  }
+  .framework-org-chart li:first-child::after {
+    border-radius: 0.5rem 0 0 0;
+  }
+  .framework-org-chart ul::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border-left: 2px solid var(--border);
+    width: 0;
+    height: 1.25rem;
+  }
 }

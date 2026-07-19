@@ -45,14 +45,14 @@ const textareaClass =
 const FRAMEWORK_TREE_PLACEHOLDER = `*Market Entry
   *Market Attractiveness
     *Market Size
-      Demand
-      Supply
+      *Demand
+      *Supply
     Growth and trends
   *Feasibility
     *Operational
-      R&D
-      Manufacturing
-      Channels and After Sales
+      *R&D
+      *Manufacturing
+      *Channels and After Sales
     Financial
   Risk & Benefits
   Entry Strategy`;
@@ -247,7 +247,8 @@ export default function NewCaseForm() {
         <Label htmlFor="framework_tree_text">Structure / Framework Tree (optional)</Label>
         <p className="text-xs text-muted-foreground">
           One branch per line. Indent with spaces to nest. Prefix a line with <code>*</code> to mark
-          it as an explored branch.
+          it as explored — shown as a solid highlight for branches with sub-items, or an outlined
+          chip for a detail item with none.
         </p>
         <textarea
           id="framework_tree_text"
