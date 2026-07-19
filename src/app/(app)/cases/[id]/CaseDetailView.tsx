@@ -369,12 +369,15 @@ function ConversationView({ turns }: { turns: ConversationTurn[] }) {
 // the <li> connector system entirely (only its children are wrapped in
 // `.framework-org-chart`), so there's nothing above the root for a stray
 // line to attach to.
-function FrameworkBox({ node }: { node: FrameworkNode }) {
+type TreeSize = "sm" | "lg";
+
+function FrameworkBox({ node, size }: { node: FrameworkNode; size: TreeSize }) {
   if (!node.label) return null;
   return (
     <div
       className={cn(
-        "flex h-14 w-32 items-center justify-center rounded-md px-2",
+        "flex items-center justify-center rounded-md",
+        size === "lg" ? "h-24 w-52 px-4" : "h-14 w-32 px-2",
         node.explored
           ? "bg-primary text-primary-foreground"
           : "bg-muted text-muted-foreground border border-border"
@@ -382,22 +385,27 @@ function FrameworkBox({ node }: { node: FrameworkNode }) {
     >
       {/* line-clamp sets display:-webkit-box, which would otherwise clobber
           the parent's flex centering if applied on the same element. */}
-      <span className="line-clamp-3 text-center text-xs font-medium leading-snug">
+      <span
+        className={cn(
+          "line-clamp-3 text-center font-medium leading-snug",
+          size === "lg" ? "text-base" : "text-xs"
+        )}
+      >
         {node.label}
       </span>
     </div>
   );
 }
 
-function FrameworkTreeNode({ node }: { node: FrameworkNode }) {
+function FrameworkTreeNode({ node, size }: { node: FrameworkNode; size: TreeSize }) {
   const hasChildren = (node.children?.length ?? 0) > 0;
   return (
     <li>
-      <FrameworkBox node={node} />
+      <FrameworkBox node={node} size={size} />
       {hasChildren && (
         <ul>
           {node.children!.map((child, i) => (
-            <FrameworkTreeNode key={i} node={child} />
+            <FrameworkTreeNode key={i} node={child} size={size} />
           ))}
         </ul>
       )}
@@ -405,16 +413,16 @@ function FrameworkTreeNode({ node }: { node: FrameworkNode }) {
   );
 }
 
-function FrameworkTreeView({ node }: { node: FrameworkNode }) {
+function FrameworkTreeView({ node, size = "sm" }: { node: FrameworkNode; size?: TreeSize }) {
   const hasChildren = (node.children?.length ?? 0) > 0;
   return (
     <div className="overflow-x-auto py-2">
       <div className="flex min-w-max flex-col items-center">
-        <FrameworkBox node={node} />
+        <FrameworkBox node={node} size={size} />
         {hasChildren && (
           <ul className="framework-org-chart">
             {node.children!.map((child, i) => (
-              <FrameworkTreeNode key={i} node={child} />
+              <FrameworkTreeNode key={i} node={child} size={size} />
             ))}
           </ul>
         )}
@@ -436,9 +444,9 @@ function BulletList({ items }: { items: string[] }) {
   );
 }
 
-function StructureContent({ structure }: { structure: CaseStructure }) {
+function StructureContent({ structure, size = "sm" }: { structure: CaseStructure; size?: TreeSize }) {
   if (structure.tree) {
-    return <FrameworkTreeView node={structure.tree} />;
+    return <FrameworkTreeView node={structure.tree} size={size} />;
   }
   if (structure.image_path) {
     return (
@@ -474,7 +482,7 @@ function StructureCard({ structure, index, total }: { structure: CaseStructure; 
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
-          <StructureContent structure={structure} />
+          <StructureContent structure={structure} size="lg" />
         </DialogContent>
       </Dialog>
     </Card>
