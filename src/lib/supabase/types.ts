@@ -230,10 +230,10 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["difficulty"]
           estimated_time: number
           framework: string[]
-          framework_tree: Json | null
           id: string
           industry: Database["public"]["Enums"]["industry"]
           recommendations: string[]
+          structures: Json
           tags: string[]
           tips: string[]
           title: string
@@ -251,10 +251,10 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["difficulty"]
           estimated_time: number
           framework?: string[]
-          framework_tree?: Json | null
           id?: string
           industry: Database["public"]["Enums"]["industry"]
           recommendations?: string[]
+          structures?: Json
           tags?: string[]
           tips?: string[]
           title: string
@@ -272,10 +272,10 @@ export type Database = {
           difficulty?: Database["public"]["Enums"]["difficulty"]
           estimated_time?: number
           framework?: string[]
-          framework_tree?: Json | null
           id?: string
           industry?: Database["public"]["Enums"]["industry"]
           recommendations?: string[]
+          structures?: Json
           tags?: string[]
           tips?: string[]
           title?: string

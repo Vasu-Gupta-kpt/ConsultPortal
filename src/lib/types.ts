@@ -82,6 +82,12 @@ export type FrameworkNode = {
   children?: FrameworkNode[];
 };
 
+export type CaseStructure = {
+  title?: string;
+  tree?: FrameworkNode | null;
+  image_path?: string | null;
+};
+
 export interface CaseRow {
   id: string;
   title: string;
@@ -97,7 +103,7 @@ export interface CaseRow {
   case_facts: string[];
   additional_info: string[];
   conversation: ConversationTurn[];
-  framework_tree: FrameworkNode | null;
+  structures: CaseStructure[];
   recommendations: string[];
   tips: string[];
   created_by: string | null;

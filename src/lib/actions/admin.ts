@@ -4,7 +4,15 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { parseFrameworkTree } from "@/lib/framework-tree";
-import type { CaseType, ConversationTurn, Difficulty, FileType, Industry, MaterialCategory } from "@/lib/types";
+import type {
+  CaseStructure,
+  CaseType,
+  ConversationTurn,
+  Difficulty,
+  FileType,
+  Industry,
+  MaterialCategory,
+} from "@/lib/types";
 
 export type AdminFormState = { error: string } | null;
 
@@ -38,6 +46,32 @@ function parseConversation(value: string): ConversationTurn[] {
   }
 }
 
+type StructureFormEntry = { title: string; mode: "text" | "image"; treeText: string; imagePath: string };
+
+function parseStructures(value: string): CaseStructure[] {
+  let entries: StructureFormEntry[];
+  try {
+    const parsed = JSON.parse(value);
+    entries = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+
+  return entries
+    .map((entry): CaseStructure | null => {
+      const title = String(entry.title ?? "").trim();
+      if (entry.mode === "image") {
+        const imagePath = String(entry.imagePath ?? "").trim();
+        if (!imagePath) return null;
+        return { title: title || undefined, image_path: imagePath };
+      }
+      const tree = parseFrameworkTree(String(entry.treeText ?? ""));
+      if (!tree) return null;
+      return { title: title || undefined, tree };
+    })
+    .filter((s): s is CaseStructure => s !== null);
+}
+
 // Authorization is enforced entirely by RLS (see
 // supabase/migrations/*_admin_content.sql -- INSERT is only permitted when
 // profiles.is_admin is true for the caller). No redundant app-level check
@@ -67,7 +101,7 @@ export async function createCase(
   const recommendations = splitLines(String(formData.get("recommendations") ?? ""));
   const tips = splitLines(String(formData.get("tips") ?? ""));
   const conversation = parseConversation(String(formData.get("conversation") ?? "[]"));
-  const frameworkTree = parseFrameworkTree(String(formData.get("framework_tree_text") ?? ""));
+  const structures = parseStructures(String(formData.get("structures") ?? "[]"));
 
   if (!title || !company || !description) {
     return { error: "Please fill in title, company, and description." };
@@ -90,7 +124,7 @@ export async function createCase(
     case_facts: caseFacts,
     additional_info: additionalInfo,
     conversation,
-    framework_tree: frameworkTree,
+    structures,
     recommendations,
     tips,
     created_by: user.id,

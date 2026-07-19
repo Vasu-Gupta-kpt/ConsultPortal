@@ -10,6 +10,7 @@ import {
   MessageSquare,
   BookOpen,
   CheckCircle2,
+  Maximize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,8 +18,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import type { CaseCommentRow, CaseRow, ConversationTurn, Difficulty, FrameworkNode } from "@/lib/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { cn, getPublicStorageUrl } from "@/lib/utils";
+import type {
+  CaseCommentRow,
+  CaseRow,
+  CaseStructure,
+  ConversationTurn,
+  Difficulty,
+  FrameworkNode,
+} from "@/lib/types";
 import { postApproach, toggleCaseSolved, toggleUpvote } from "@/lib/actions/cases";
 
 export type CommentItem = CaseCommentRow & { upvotes: number; isUpvoted: boolean };
@@ -351,46 +360,36 @@ function ConversationView({ turns }: { turns: ConversationTurn[] }) {
   );
 }
 
-// Horizontal box-and-line org chart, matching the source casebook's layout
-// (branch nodes as solid boxes -- red if explored, gray if not; leaf detail
-// nodes as small outlined chips when explored). Connector lines are drawn
-// by the .framework-org-chart CSS in globals.css using the classic nested
-// <ul>/<li> technique -- no charting library needed.
-function FrameworkTreeView({ node }: { node: FrameworkNode }) {
+// Horizontal box-and-line org chart. Connector lines are drawn by the
+// .framework-org-chart CSS in globals.css using the classic nested <ul>/<li>
+// technique -- no charting library needed. The technique only works
+// reliably when every box is the same size, so every node here (root
+// included) shares one fixed dimension and one two-state color rule
+// (explored vs not) -- and critically, the ROOT box is rendered *outside*
+// the <li> connector system entirely (only its children are wrapped in
+// `.framework-org-chart`), so there's nothing above the root for a stray
+// line to attach to.
+function FrameworkBox({ node }: { node: FrameworkNode }) {
+  if (!node.label) return null;
   return (
-    <div className="overflow-x-auto py-2">
-      <ul className="framework-org-chart min-w-max">
-        <FrameworkTreeNode node={node} />
-      </ul>
+    <div
+      className={cn(
+        "flex h-14 w-32 items-center justify-center rounded-md px-2 text-center text-xs font-medium leading-snug line-clamp-3",
+        node.explored
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted text-muted-foreground border border-border"
+      )}
+    >
+      {node.label}
     </div>
   );
 }
 
 function FrameworkTreeNode({ node }: { node: FrameworkNode }) {
   const hasChildren = (node.children?.length ?? 0) > 0;
-
   return (
     <li>
-      {node.label && (
-        <div
-          className={cn(
-            "max-w-[140px] rounded-md text-center leading-snug",
-            hasChildren
-              ? cn(
-                  "px-3 py-2 text-xs font-medium",
-                  node.explored ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                )
-              : cn(
-                  "px-2.5 py-1.5 text-xs",
-                  node.explored
-                    ? "border-2 border-primary bg-background text-foreground"
-                    : "bg-muted text-muted-foreground"
-                )
-          )}
-        >
-          {node.label}
-        </div>
-      )}
+      <FrameworkBox node={node} />
       {hasChildren && (
         <ul>
           {node.children!.map((child, i) => (
@@ -399,6 +398,24 @@ function FrameworkTreeNode({ node }: { node: FrameworkNode }) {
         </ul>
       )}
     </li>
+  );
+}
+
+function FrameworkTreeView({ node }: { node: FrameworkNode }) {
+  const hasChildren = (node.children?.length ?? 0) > 0;
+  return (
+    <div className="overflow-x-auto py-2">
+      <div className="flex min-w-max flex-col items-center">
+        <FrameworkBox node={node} />
+        {hasChildren && (
+          <ul className="framework-org-chart">
+            {node.children!.map((child, i) => (
+              <FrameworkTreeNode key={i} node={child} />
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -415,8 +432,54 @@ function BulletList({ items }: { items: string[] }) {
   );
 }
 
+function StructureContent({ structure }: { structure: CaseStructure }) {
+  if (structure.tree) {
+    return <FrameworkTreeView node={structure.tree} />;
+  }
+  if (structure.image_path) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded image from Supabase Storage, not a local asset
+      <img
+        src={getPublicStorageUrl("case-structures", structure.image_path)}
+        alt={structure.title ?? "Case structure diagram"}
+        className="max-w-full rounded-md"
+      />
+    );
+  }
+  return null;
+}
+
+function StructureCard({ structure, index, total }: { structure: CaseStructure; index: number; total: number }) {
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const title = structure.title || (total > 1 ? `Structure ${index + 1}` : "Structure / Framework");
+
+  return (
+    <Card>
+      <CardHeader className="pb-2 flex items-center justify-between space-y-0">
+        <CardTitle className="text-sm">{title}</CardTitle>
+        <Button size="icon-sm" variant="ghost" onClick={() => setZoomOpen(true)} title="Zoom in">
+          <Maximize2 className="h-3.5 w-3.5 text-muted-foreground" />
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <StructureContent structure={structure} />
+      </CardContent>
+
+      <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+          <StructureContent structure={structure} />
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
 function StructureView({ caseData }: { caseData: CaseRow }) {
   const hasFacts = caseData.case_facts.length > 0 || caseData.additional_info.length > 0;
+  const hasStructures = caseData.structures.length > 0;
 
   return (
     <div className="grid lg:grid-cols-3 gap-4">
@@ -446,27 +509,31 @@ function StructureView({ caseData }: { caseData: CaseRow }) {
       )}
 
       <div className={cn("space-y-4", hasFacts ? "lg:col-span-2" : "lg:col-span-3")}>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Structure / Framework</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {caseData.framework_tree ? (
-              <FrameworkTreeView node={caseData.framework_tree} />
-            ) : caseData.framework.length > 0 ? (
-              <div className="space-y-1.5">
-                {caseData.framework.map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                    {f}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No framework added for this case yet.</p>
-            )}
-          </CardContent>
-        </Card>
+        {hasStructures ? (
+          caseData.structures.map((structure, i) => (
+            <StructureCard key={i} structure={structure} index={i} total={caseData.structures.length} />
+          ))
+        ) : (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Structure / Framework</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {caseData.framework.length > 0 ? (
+                <div className="space-y-1.5">
+                  {caseData.framework.map((f) => (
+                    <div key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No framework added for this case yet.</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {caseData.recommendations.length > 0 && (
           <Card>

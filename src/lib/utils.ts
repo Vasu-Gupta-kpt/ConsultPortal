@@ -30,3 +30,11 @@ export function formatDateLabel(value: string): string {
     day: "numeric",
   })
 }
+
+// Public buckets (e.g. `case-structures`) serve objects at a predictable
+// URL with no signing needed -- unlike the private `materials` bucket's
+// signed-URL flow in src/lib/actions/materials.ts. Plain string
+// construction, works in both server and client contexts.
+export function getPublicStorageUrl(bucket: string, path: string): string {
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`
+}

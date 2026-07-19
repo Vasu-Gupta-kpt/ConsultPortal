@@ -4,11 +4,19 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Plus, Trash2 } from "lucide-react";
 import { createCase } from "@/lib/actions/admin";
+import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CaseType, ConversationTurn, Difficulty, Industry } from "@/lib/types";
+
+type StructureEntry = {
+  title: string;
+  mode: "text" | "image";
+  treeText: string;
+  imagePath: string;
+};
 
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 
@@ -134,13 +142,125 @@ function ConversationEditor({
   );
 }
 
+function StructureEditor({
+  structures,
+  setStructures,
+}: {
+  structures: StructureEntry[];
+  setStructures: (structures: StructureEntry[]) => void;
+}) {
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  function addStructure() {
+    setStructures([...structures, { title: "", mode: "text", treeText: "", imagePath: "" }]);
+  }
+
+  function updateStructure(index: number, patch: Partial<StructureEntry>) {
+    setStructures(structures.map((s, i) => (i === index ? { ...s, ...patch } : s)));
+  }
+
+  function removeStructure(index: number) {
+    setStructures(structures.filter((_, i) => i !== index));
+  }
+
+  async function handleFileChange(index: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadError(null);
+    setUploadingIndex(index);
+
+    const supabase = createClient();
+    const path = `${crypto.randomUUID()}-${file.name}`;
+    const { error } = await supabase.storage.from("case-structures").upload(path, file);
+
+    setUploadingIndex(null);
+    if (error) {
+      setUploadError(`Upload failed: ${error.message}`);
+      return;
+    }
+    updateStructure(index, { imagePath: path });
+  }
+
+  return (
+    <div className="space-y-3">
+      {structures.map((s, i) => (
+        <div key={i} className="rounded-lg border p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <Input
+              value={s.title}
+              onChange={(e) => updateStructure(i, { title: e.target.value })}
+              placeholder={`Structure ${i + 1} title (optional)`}
+              className="h-8"
+            />
+            <button
+              type="button"
+              onClick={() => removeStructure(i)}
+              className="flex-shrink-0 text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <div className="flex gap-1">
+            {(["text", "image"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => updateStructure(i, { mode })}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs font-medium capitalize transition-colors",
+                  s.mode === mode
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+          {s.mode === "text" ? (
+            <textarea
+              value={s.treeText}
+              onChange={(e) => updateStructure(i, { treeText: e.target.value })}
+              rows={8}
+              placeholder={FRAMEWORK_TREE_PLACEHOLDER}
+              className={cn(textareaClass, "font-mono text-xs")}
+            />
+          ) : (
+            <div className="space-y-1.5">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileChange(i, e)}
+                className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary"
+              />
+              {uploadingIndex === i && <p className="text-xs text-muted-foreground">Uploading...</p>}
+              {s.imagePath && uploadingIndex !== i && (
+                <p className="text-xs text-emerald-600">Uploaded</p>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+      {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
+      <Button type="button" variant="outline" size="sm" className="gap-1" onClick={addStructure}>
+        <Plus className="h-3.5 w-3.5" />
+        Add Structure
+      </Button>
+    </div>
+  );
+}
+
 export default function NewCaseForm() {
   const [state, formAction] = useActionState(createCase, null);
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
+  const [structures, setStructures] = useState<StructureEntry[]>([]);
 
   return (
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="conversation" value={JSON.stringify(turns)} />
+      <input type="hidden" name="structures" value={JSON.stringify(structures)} />
 
       <div className="space-y-1.5">
         <Label htmlFor="title">Title</Label>
@@ -244,19 +364,13 @@ export default function NewCaseForm() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="framework_tree_text">Structure / Framework Tree (optional)</Label>
+        <Label>Structures / Frameworks (optional)</Label>
         <p className="text-xs text-muted-foreground">
-          One branch per line. Indent with spaces to nest. Prefix a line with <code>*</code> to mark
-          it as explored — shown as a solid highlight for branches with sub-items, or an outlined
-          chip for a detail item with none.
+          A case can have more than one. For each, either type the tree (one branch per line,
+          indent with spaces to nest, prefix a line with <code>*</code> to mark it explored) or
+          upload a picture of the diagram instead.
         </p>
-        <textarea
-          id="framework_tree_text"
-          name="framework_tree_text"
-          rows={10}
-          placeholder={FRAMEWORK_TREE_PLACEHOLDER}
-          className={cn(textareaClass, "font-mono text-xs")}
-        />
+        <StructureEditor structures={structures} setStructures={setStructures} />
       </div>
 
       <div className="space-y-1.5">

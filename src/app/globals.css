@@ -141,12 +141,28 @@
      tab's framework tree (src/app/(app)/cases/[id]/CaseDetailView.tsx).
      Standard nested <ul>/<li> "family tree" technique: each <li> draws a
      horizontal half-line via ::before/::after, nested <ul>s draw the
-     vertical drop from their parent box. */
+     vertical drop from their parent box. The root node is rendered as a
+     plain box *outside* this <ul>/<li> system (only its children are
+     wrapped in .framework-org-chart) -- .framework-org-chart itself
+     therefore needs its own top stub connecting up to that root box,
+     mirroring what nested <ul>::before does at every level below it. */
   .framework-org-chart,
   .framework-org-chart ul {
     display: flex;
     justify-content: center;
     position: relative;
+  }
+  .framework-org-chart {
+    padding-top: 1.25rem;
+  }
+  .framework-org-chart::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border-left: 2px solid var(--border);
+    width: 0;
+    height: 1.25rem;
   }
   .framework-org-chart li {
     list-style: none;
