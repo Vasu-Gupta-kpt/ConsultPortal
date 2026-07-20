@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useLayoutEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -454,11 +454,54 @@ function StructureContent({ structure, size = "sm" }: { structure: CaseStructure
       <img
         src={getPublicStorageUrl("case-structures", structure.image_path)}
         alt={structure.title ?? "Case structure diagram"}
-        className="max-w-full rounded-md"
+        // In "lg" (zoomed modal) mode, FitToContainer scales this to fit --
+        // no width cap needed, letting it measure/render at natural size.
+        className={cn("rounded-md", size === "sm" && "max-w-full")}
       />
     );
   }
   return null;
+}
+
+// Scales its children down (or up) via a CSS transform so the whole thing
+// always fits within the available space, with no scrolling -- used for the
+// structure zoom modal, where the diagram should always be fully visible
+// regardless of how large or wide it naturally is. Measures the content's
+// true natural size via scrollWidth/scrollHeight (unaffected by the
+// transform itself, since CSS transforms don't change layout size) and
+// recomputes on resize via ResizeObserver.
+function FitToContainer({ children, className }: { children: React.ReactNode; className?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const content = contentRef.current;
+    if (!container || !content) return;
+
+    function recompute() {
+      const containerWidth = container!.clientWidth;
+      const containerHeight = container!.clientHeight;
+      const contentWidth = content!.scrollWidth;
+      const contentHeight = content!.scrollHeight;
+      if (!containerWidth || !containerHeight || !contentWidth || !contentHeight) return;
+      setScale(Math.min(containerWidth / contentWidth, containerHeight / contentHeight));
+    }
+
+    recompute();
+    const observer = new ResizeObserver(recompute);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [children]);
+
+  return (
+    <div ref={containerRef} className={cn("flex items-center justify-center overflow-hidden", className)}>
+      <div ref={contentRef} className="w-max" style={{ transform: `scale(${scale})`, transformOrigin: "center" }}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 function StructureCard({ structure, index, total }: { structure: CaseStructure; index: number; total: number }) {
@@ -478,11 +521,13 @@ function StructureCard({ structure, index, total }: { structure: CaseStructure; 
       </CardContent>
 
       <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
-        <DialogContent className="w-[98vw] h-[95vh] max-w-[98vw] sm:max-w-[98vw] max-h-[95vh] overflow-auto">
+        <DialogContent className="w-[98vw] h-[95vh] max-w-[98vw] sm:max-w-[98vw] max-h-[95vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
-          <StructureContent structure={structure} size="lg" />
+          <FitToContainer className="min-h-0 flex-1">
+            <StructureContent structure={structure} size="lg" />
+          </FitToContainer>
         </DialogContent>
       </Dialog>
     </Card>
