@@ -9,6 +9,7 @@ import {
   Clock,
   CheckCircle2,
   MessageCircle,
+  Send,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { requestBooking } from "@/lib/actions/peer-practice";
+import { askForSlot, requestBooking } from "@/lib/actions/peer-practice";
 import type { SlotLocation } from "@/lib/types";
 import { cn, formatDateLabel, parseDateInputValue, toDateInputValue } from "@/lib/utils";
 import AddSlotButton from "./AddSlotButton";
@@ -96,6 +97,12 @@ export default function PeerPracticeBrowser({ students }: { students: PeerListIt
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [requestingSlotId, setRequestingSlotId] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [askStudent, setAskStudent] = useState<PeerListItem | null>(null);
+  const [askMessage, setAskMessage] = useState("");
+  const [askSending, setAskSending] = useState(false);
+  const [askError, setAskError] = useState<string | null>(null);
+  const [askSent, setAskSent] = useState(false);
+  const [askWhatsappLink, setAskWhatsappLink] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   // Locally-known-requested slot ids, layered on top of server data so a
   // just-requested slot immediately shows as unavailable everywhere without
@@ -143,7 +150,7 @@ export default function PeerPracticeBrowser({ students }: { students: PeerListIt
         const matchesYear = yearFilter === "all" || s.year.toString() === yearFilter;
         const hasMatchingSlot =
           locationFilter.size === 0 && timeFilter.size === 0
-            ? s.availability.some((sl) => !sl.isBooked)
+            ? true
             : s.availability.some((sl) => slotMatchesFilters(sl, locationFilter, timeFilter));
         return matchesSearch && matchesYear && hasMatchingSlot;
       }),
@@ -183,6 +190,22 @@ export default function PeerPracticeBrowser({ students }: { students: PeerListIt
       setRequestedSlot(slot);
       setWhatsappLink(result.whatsappLink);
       setConfirmOpen(true);
+    });
+  }
+
+  function handleAsk() {
+    if (!askStudent) return;
+    setAskError(null);
+    setAskSending(true);
+    startTransition(async () => {
+      const result = await askForSlot(askStudent.id, askMessage);
+      setAskSending(false);
+      if ("error" in result) {
+        setAskError(result.error);
+        return;
+      }
+      setAskWhatsappLink(result.whatsappLink);
+      setAskSent(true);
     });
   }
 
@@ -301,6 +324,13 @@ export default function PeerPracticeBrowser({ students }: { students: PeerListIt
             onBook={() => {
               setSelectedStudent(student);
               setDialogDate(undefined);
+            }}
+            onAsk={() => {
+              setAskStudent(student);
+              setAskMessage("");
+              setAskError(null);
+              setAskSent(false);
+              setAskWhatsappLink(null);
             }}
           />
         ))}
@@ -454,6 +484,77 @@ export default function PeerPracticeBrowser({ students }: { students: PeerListIt
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* Ask for a slot modal -- for students with no listed availability
+          (or as a fallback even when they do have slots listed) */}
+      <Dialog open={!!askStudent} onOpenChange={(o) => !o && setAskStudent(null)}>
+        <DialogContent className="max-w-sm">
+          {askStudent && !askSent && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Ask for a Slot</DialogTitle>
+                <DialogDescription>
+                  Send {askStudent.name} a quick ask to add a Peer Practice slot whenever works for
+                  them.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex items-center gap-3 py-2">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {askStudent.name.split(" ").map((n) => n[0]).join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-sm">{askStudent.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Year {askStudent.year} &bull; {askStudent.hostel}
+                  </p>
+                </div>
+              </div>
+              <textarea
+                value={askMessage}
+                onChange={(e) => setAskMessage(e.target.value)}
+                rows={3}
+                placeholder="Optional message, e.g. preferred days/times..."
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+              />
+              {askError && <p className="text-sm text-destructive">{askError}</p>}
+              <Button className="w-full gap-1.5" disabled={askSending} onClick={handleAsk}>
+                <Send className="h-3.5 w-3.5" />
+                {askSending ? "Sending..." : "Send Ask"}
+              </Button>
+            </>
+          )}
+          {askStudent && askSent && (
+            <div className="text-center py-2">
+              <div className="flex justify-center mb-3">
+                <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                </div>
+              </div>
+              <DialogTitle>Ask Sent</DialogTitle>
+              <DialogDescription className="mt-1">
+                {askStudent.name} has been notified. They can add a slot from their profile
+                whenever works.
+              </DialogDescription>
+              {askWhatsappLink && (
+                <a
+                  href={askWhatsappLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center justify-center gap-1.5 w-full rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted transition-colors"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Message on WhatsApp
+                </a>
+              )}
+              <Button className="mt-2 w-full" onClick={() => setAskStudent(null)}>
+                Done
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -463,11 +564,13 @@ function StudentCard({
   locationFilter,
   timeFilter,
   onBook,
+  onAsk,
 }: {
   student: PeerListItem;
   locationFilter: Set<SlotLocation>;
   timeFilter: Set<TimeBucket>;
   onBook: () => void;
+  onAsk: () => void;
 }) {
   const matchingSlots = student.availability.filter((s) =>
     slotMatchesFilters(s, locationFilter, timeFilter)
@@ -544,18 +647,29 @@ function StudentCard({
               <span className="font-medium text-foreground">{student.rating.toFixed(1)}</span>
               <span>({student.reviewCount})</span>
             </span>
-            <span
-              className={cn(
-                "font-medium",
-                displayCount > 0 ? "text-emerald-600" : "text-muted-foreground"
-              )}
-            >
-              {displayCount} slot{displayCount !== 1 ? "s" : ""} free
-            </span>
+            {displayCount > 0 ? (
+              <span className="font-medium text-emerald-600">
+                {displayCount} slot{displayCount !== 1 ? "s" : ""} free
+              </span>
+            ) : (
+              <span className="text-muted-foreground">No slots listed</span>
+            )}
           </div>
-          <Button size="sm" className="h-7 text-xs" disabled={availableSlots === 0} onClick={onBook}>
-            Request
-          </Button>
+          <div className="flex items-center gap-1.5">
+            {availableSlots > 0 && (
+              <Button size="sm" className="h-7 text-xs" onClick={onBook}>
+                Request
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant={availableSlots > 0 ? "outline" : "default"}
+              className="h-7 text-xs"
+              onClick={onAsk}
+            >
+              Ask
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

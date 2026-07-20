@@ -36,7 +36,6 @@ export default async function PeerPracticePage() {
   const students: PeerListItem[] = (
     (profiles ?? []) as Array<ProfileRow & { availability_slots: AvailabilitySlotRow[] }>
   )
-    .filter((p) => p.availability_slots.length > 0)
     .map((p) => ({
       id: p.id,
       name: p.full_name ?? p.email,

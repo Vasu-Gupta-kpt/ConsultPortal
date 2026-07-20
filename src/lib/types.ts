@@ -155,3 +155,14 @@ export interface BookingRow {
   cancelled_at: string | null;
   google_event_id: string | null;
 }
+
+export type SlotRequestStatus = "pending" | "dismissed";
+
+export interface SlotRequestRow {
+  id: string;
+  requested_by: string;
+  requested_of: string;
+  message: string | null;
+  status: SlotRequestStatus;
+  created_at: string;
+}

@@ -6,6 +6,7 @@ import AvailabilityManager, { type OwnSlot } from "./AvailabilityManager";
 import MyBookings, { type OutgoingBooking } from "./MyBookings";
 import MyCalendar, { type ConfirmedSession } from "./MyCalendar";
 import ConnectCalendarButton from "./ConnectCalendarButton";
+import SlotRequestsInbox, { type IncomingSlotRequest } from "./SlotRequestsInbox";
 
 type RequesterProfile = {
   full_name: string | null;
@@ -36,6 +37,13 @@ type OutgoingBookingRow = {
   } | null;
 };
 
+type IncomingSlotRequestRow = {
+  id: string;
+  message: string | null;
+  created_at: string;
+  profiles: { full_name: string | null; contact_number: string | null } | null;
+};
+
 export default async function ProfilePage() {
   const supabase = await createClient();
   const {
@@ -46,21 +54,28 @@ export default async function ProfilePage() {
     redirect("/");
   }
 
-  const [{ data: profile }, { data: mySlotsRaw }, { data: myBookingsRaw }] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
-    supabase
-      .from("availability_slots")
-      .select("*, bookings(id, status, booked_by, profiles(full_name, contact_number, room_number))")
-      .eq("profile_id", user.id)
-      .order("slot_date"),
-    supabase
-      .from("bookings")
-      .select(
-        "id, status, availability_slots(slot_date, start_time, end_time, location, profiles(full_name, contact_number, room_number))"
-      )
-      .eq("booked_by", user.id)
-      .order("booked_at", { ascending: false }),
-  ]);
+  const [{ data: profile }, { data: mySlotsRaw }, { data: myBookingsRaw }, { data: slotRequestsRaw }] =
+    await Promise.all([
+      supabase.from("profiles").select("*").eq("id", user.id).single(),
+      supabase
+        .from("availability_slots")
+        .select("*, bookings(id, status, booked_by, profiles(full_name, contact_number, room_number))")
+        .eq("profile_id", user.id)
+        .order("slot_date"),
+      supabase
+        .from("bookings")
+        .select(
+          "id, status, availability_slots(slot_date, start_time, end_time, location, profiles(full_name, contact_number, room_number))"
+        )
+        .eq("booked_by", user.id)
+        .order("booked_at", { ascending: false }),
+      supabase
+        .from("slot_requests")
+        .select("id, message, created_at, profiles!slot_requests_requested_by_fkey(full_name, contact_number)")
+        .eq("requested_of", user.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false }),
+    ]);
 
   if (!profile) {
     redirect("/onboarding");
@@ -103,6 +118,16 @@ export default async function ProfilePage() {
       };
     });
 
+  const incomingSlotRequests: IncomingSlotRequest[] = (
+    (slotRequestsRaw ?? []) as unknown as IncomingSlotRequestRow[]
+  ).map((r) => ({
+    id: r.id,
+    requesterName: r.profiles?.full_name ?? "A classmate",
+    requesterContact: r.profiles?.contact_number ?? null,
+    message: r.message,
+    createdAt: r.created_at,
+  }));
+
   const confirmedSessions: ConfirmedSession[] = [
     ...mySlots.flatMap((s) => {
       const confirmed = s.bookings.find((b) => b.status === "confirmed");
@@ -141,6 +166,7 @@ export default async function ProfilePage() {
       </div>
       <ProfileEditor profile={profile as ProfileRow} />
       <MyCalendar sessions={confirmedSessions} />
+      <SlotRequestsInbox requests={incomingSlotRequests} />
       <AvailabilityManager slots={mySlots} />
       <MyBookings bookings={myBookings} />
     </div>

@@ -460,6 +460,48 @@ export type Database = {
         }
         Relationships: []
       }
+      slot_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          requested_by: string
+          requested_of: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          requested_by: string
+          requested_of: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          requested_by?: string
+          requested_of?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slot_requests_requested_of_fkey"
+            columns: ["requested_of"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

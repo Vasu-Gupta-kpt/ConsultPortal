@@ -332,3 +332,70 @@ export async function deleteAvailabilitySlot(slotId: string): Promise<SimpleResu
   revalidatePath("/peer-practice");
   return { success: true };
 }
+
+// Lighter-weight than requestBooking: asks ANY other student (typically a
+// senior with no listed availability) to add a slot whenever suits them --
+// no slot_id involved. See supabase/migrations/*_slot_requests.sql.
+export async function askForSlot(seniorId: string, message: string): Promise<RequestResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in" };
+
+  const trimmedMessage = message.trim();
+
+  const { error } = await supabase.from("slot_requests").insert({
+    requested_by: user.id,
+    requested_of: seniorId,
+    message: trimmedMessage || null,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "You've already asked this person -- wait for them to respond." };
+    }
+    return { error: error.message };
+  }
+
+  const [{ data: senior }, { data: requesterProfile }] = await Promise.all([
+    supabase.from("profiles").select("email, contact_number").eq("id", seniorId).single(),
+    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+  ]);
+
+  let whatsappLink: string | null = null;
+
+  if (senior) {
+    const requesterName = requesterProfile?.full_name ?? "A classmate";
+    const waMessage = `Hi! I'd love to book a Peer Practice session with you sometime.${
+      trimmedMessage ? ` ${trimmedMessage}` : ""
+    } Could you add a slot on the IIMC Consult Club portal whenever works for you? -${requesterName}`;
+
+    void sendEmail({
+      to: senior.email,
+      subject: "New Peer Practice request",
+      html: `<p><strong>${requesterName}</strong> would like to book a Peer Practice session with you.</p>${
+        trimmedMessage ? `<p>"${trimmedMessage}"</p>` : ""
+      }<p>Add a slot whenever works for you from your profile page.</p>`,
+    });
+
+    if (senior.contact_number) {
+      whatsappLink = buildWhatsAppLink(senior.contact_number, waMessage);
+    }
+  }
+
+  revalidatePath("/profile");
+  return { success: true, whatsappLink };
+}
+
+export async function dismissSlotRequest(requestId: string): Promise<SimpleResult> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("slot_requests")
+    .update({ status: "dismissed" })
+    .eq("id", requestId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/profile");
+  return { success: true };
+}
