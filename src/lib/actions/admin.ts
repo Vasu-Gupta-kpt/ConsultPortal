@@ -15,6 +15,7 @@ import type {
 } from "@/lib/types";
 
 export type AdminFormState = { error: string } | null;
+export type DeleteResult = { error: string } | { success: true };
 
 function splitList(value: string): string[] {
   return value
@@ -176,4 +177,53 @@ export async function createMaterial(
 
   revalidatePath("/materials");
   redirect("/materials");
+}
+
+// Dependent rows (case_comments, case_solves, case_comment_upvotes) already
+// cascade-delete via existing FKs (see supabase/migrations/20260710102618_cases.sql)
+// -- this only needs to additionally clean up any uploaded structure images,
+// which live in Storage, not the database, so they don't cascade on their own.
+export async function deleteCase(caseId: string): Promise<DeleteResult> {
+  const supabase = await createClient();
+
+  const { data: caseRow } = await supabase
+    .from("cases")
+    .select("structures")
+    .eq("id", caseId)
+    .single();
+
+  const { error } = await supabase.from("cases").delete().eq("id", caseId);
+  if (error) return { error: error.message };
+
+  const imagePaths = ((caseRow?.structures as CaseStructure[] | null) ?? [])
+    .map((s) => s.image_path)
+    .filter((p): p is string => Boolean(p));
+  if (imagePaths.length > 0) {
+    void supabase.storage.from("case-structures").remove(imagePaths);
+  }
+
+  revalidatePath("/cases");
+  return { success: true };
+}
+
+// material_downloads cascades via FK; the uploaded file itself lives in
+// Storage and needs explicit cleanup.
+export async function deleteMaterial(materialId: string): Promise<DeleteResult> {
+  const supabase = await createClient();
+
+  const { data: materialRow } = await supabase
+    .from("materials")
+    .select("file_path")
+    .eq("id", materialId)
+    .single();
+
+  const { error } = await supabase.from("materials").delete().eq("id", materialId);
+  if (error) return { error: error.message };
+
+  if (materialRow?.file_path) {
+    void supabase.storage.from("materials").remove([materialRow.file_path]);
+  }
+
+  revalidatePath("/materials");
+  return { success: true };
 }

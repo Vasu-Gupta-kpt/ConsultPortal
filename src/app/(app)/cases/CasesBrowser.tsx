@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -9,13 +9,23 @@ import {
   Building2,
   Filter,
   SlidersHorizontal,
+  Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { deleteCase } from "@/lib/actions/admin";
 import type { CaseRow, Difficulty, CaseType } from "@/lib/types";
 
 export type CaseListItem = CaseRow & { solvedCount: number; isSolved: boolean };
@@ -56,19 +66,40 @@ export default function CasesBrowser({
   cases: CaseListItem[];
   isAdmin: boolean;
 }) {
+  const [caseItems, setCaseItems] = useState(cases);
   const [search, setSearch] = useState("");
   const [selectedDifficulties, setSelectedDifficulties] = useState<Difficulty[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<CaseType[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<CaseListItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
 
   function toggle<T>(arr: T[], val: T): T[] {
     return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
   }
 
+  function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleteError(null);
+    setDeleting(true);
+    startTransition(async () => {
+      const result = await deleteCase(deleteTarget.id);
+      setDeleting(false);
+      if ("error" in result) {
+        setDeleteError(result.error);
+        return;
+      }
+      setCaseItems((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    });
+  }
+
   const filtered = useMemo(() => {
-    return cases.filter((c) => {
+    return caseItems.filter((c) => {
       if (search && !c.title.toLowerCase().includes(search.toLowerCase())) return false;
       if (selectedDifficulties.length && !selectedDifficulties.includes(c.difficulty)) return false;
       if (selectedTypes.length && !selectedTypes.includes(c.type)) return false;
@@ -76,7 +107,7 @@ export default function CasesBrowser({
       if (selectedCompanies.length && !selectedCompanies.includes(c.company)) return false;
       return true;
     });
-  }, [cases, search, selectedDifficulties, selectedTypes, selectedIndustries, selectedCompanies]);
+  }, [caseItems, search, selectedDifficulties, selectedTypes, selectedIndustries, selectedCompanies]);
 
   const activeFiltersCount =
     selectedDifficulties.length +
@@ -91,7 +122,7 @@ export default function CasesBrowser({
         <div>
           <h1 className="text-2xl font-bold mb-1">Case Library</h1>
           <p className="text-muted-foreground text-sm">
-            {filtered.length} of {cases.length} cases
+            {filtered.length} of {caseItems.length} cases
           </p>
         </div>
         {isAdmin && (
@@ -207,12 +238,25 @@ export default function CasesBrowser({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           <h3 className="font-medium text-sm leading-snug">{c.title}</h3>
-                          <Badge
-                            variant="outline"
-                            className={cn("text-xs flex-shrink-0", difficultyColors[c.difficulty])}
-                          >
-                            {c.difficulty}
-                          </Badge>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <Badge variant="outline" className={cn("text-xs", difficultyColors[c.difficulty])}>
+                              {c.difficulty}
+                            </Badge>
+                            {isAdmin && (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setDeleteTarget(c);
+                                  setDeleteError(null);
+                                }}
+                                className="text-muted-foreground hover:text-destructive"
+                                title="Delete case"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                           <Badge variant="secondary" className="text-xs font-normal">
@@ -240,6 +284,31 @@ export default function CasesBrowser({
           )}
         </div>
       </div>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete this case?</DialogTitle>
+            <DialogDescription>
+              {deleteTarget && (
+                <>
+                  This permanently deletes <span className="font-medium text-foreground">{deleteTarget.title}</span>,
+                  along with every approach and solved-mark students have posted on it. This cannot be undone.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete Case"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

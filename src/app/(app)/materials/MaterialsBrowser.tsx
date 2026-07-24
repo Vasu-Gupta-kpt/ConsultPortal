@@ -2,13 +2,22 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Download, Search, FileText, Video, BookOpen } from "lucide-react";
+import { Download, Search, FileText, Video, BookOpen, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { downloadMaterial } from "@/lib/actions/materials";
+import { deleteMaterial } from "@/lib/actions/admin";
 import type { MaterialRow } from "@/lib/types";
 
 export type MaterialListItem = MaterialRow & { downloadCount: number };
@@ -33,15 +42,35 @@ export default function MaterialsBrowser({
   materials: MaterialListItem[];
   isAdmin: boolean;
 }) {
+  const [materialItems, setMaterialItems] = useState(materials);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MaterialListItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const categories = ["All", "Framework", "Industry Note", "Skill", "Casebook"];
 
-  const filtered = materials.filter((m) => {
+  function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleteError(null);
+    setDeleting(true);
+    startTransition(async () => {
+      const result = await deleteMaterial(deleteTarget.id);
+      setDeleting(false);
+      if ("error" in result) {
+        setDeleteError(result.error);
+        return;
+      }
+      setMaterialItems((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    });
+  }
+
+  const filtered = materialItems.filter((m) => {
     const matchesSearch =
       !search ||
       m.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -115,12 +144,26 @@ export default function MaterialsBrowser({
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${categoryColors[material.category]}`}
-                  >
-                    {material.category}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${categoryColors[material.category]}`}
+                    >
+                      {material.category}
+                    </Badge>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          setDeleteTarget(material);
+                          setDeleteError(null);
+                        }}
+                        className="text-muted-foreground hover:text-destructive"
+                        title="Delete material"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <h3 className="font-semibold text-sm mb-1.5 leading-snug">{material.title}</h3>
                 <p className="text-xs text-muted-foreground mb-3 flex-1 leading-relaxed">
@@ -165,6 +208,32 @@ export default function MaterialsBrowser({
           <p>No materials found for your search.</p>
         </div>
       )}
+
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete this material?</DialogTitle>
+            <DialogDescription>
+              {deleteTarget && (
+                <>
+                  This permanently deletes{" "}
+                  <span className="font-medium text-foreground">{deleteTarget.title}</span>
+                  {deleteTarget.file_path ? " and its uploaded file" : ""}. This cannot be undone.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete Material"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
