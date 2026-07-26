@@ -55,22 +55,25 @@ export async function submitOnboarding(
     return { error: "Please enter a valid contact number." };
   }
 
-  // Upsert rather than update: on the rare chance the on_auth_user_created
-  // trigger hasn't created this user's profiles row yet (or somehow never
-  // did), an update would silently affect zero rows and this would still
-  // redirect to /dashboard -- which would immediately bounce back here via
-  // the (app) layout gate, looping the student on this form forever.
-  // Upsert guarantees the row exists after this call either way.
-  const { error } = await supabase.from("profiles").upsert({
-    id: user.id,
-    email: user.email,
-    year,
-    hostel,
-    contact_number: contactNumber,
-    room_number: roomNumber || null,
-    specialization: specialization || null,
-    bio: bio || null,
-  });
+  // Plain update, not upsert: profiles has no INSERT policy for regular
+  // users (row creation is exclusively the on_auth_user_created trigger's
+  // job, running as SECURITY DEFINER) -- upsert compiles to
+  // INSERT ... ON CONFLICT DO UPDATE, and Postgres checks INSERT-permission
+  // RLS on that statement shape regardless of whether the row already
+  // exists, so it fails RLS for every user, not just the rare missing-row
+  // edge case it was meant to guard against. Reverted after that broke
+  // onboarding for everyone.
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      year,
+      hostel,
+      contact_number: contactNumber,
+      room_number: roomNumber || null,
+      specialization: specialization || null,
+      bio: bio || null,
+    })
+    .eq("id", user.id);
 
   if (error) {
     return { error: error.message };
