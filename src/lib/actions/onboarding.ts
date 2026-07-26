@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Hostel } from "@/lib/types";
 
@@ -78,6 +79,12 @@ export async function submitOnboarding(
   if (error) {
     return { error: error.message };
   }
+
+  // Without this, Next.js can serve a cached pre-onboarding render of
+  // /dashboard (and /onboarding itself) right after this redirect --
+  // showing the stale "not yet onboarded" gate result and bouncing back to
+  // /onboarding in a loop, even though profiles.year was just set.
+  revalidatePath("/", "layout");
 
   redirect("/dashboard");
 }
