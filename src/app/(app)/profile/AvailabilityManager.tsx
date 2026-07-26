@@ -14,7 +14,7 @@ import {
   cancelBooking,
 } from "@/lib/actions/peer-practice";
 import type { SlotLocation } from "@/lib/types";
-import { cn, formatDateLabel, toDateInputValue } from "@/lib/utils";
+import { cn, formatDateLabel, slotsOverlap, toDateInputValue } from "@/lib/utils";
 
 export type OwnBooking = {
   id: string;
@@ -64,6 +64,11 @@ export default function AvailabilityManager({ slots: initialSlots }: { slots: Ow
       return;
     }
     const isoDate = toDateInputValue(date);
+    const clash = slots.find((s) => slotsOverlap(s, { date: isoDate, startTime, endTime }));
+    if (clash) {
+      setError(`This clashes with your ${clash.startTime}–${clash.endTime} slot on ${formatDateLabel(clash.date)}.`);
+      return;
+    }
     startTransition(async () => {
       const result = await createAvailabilitySlot(isoDate, startTime, endTime, location);
       if ("error" in result) {
@@ -333,7 +338,25 @@ export default function AvailabilityManager({ slots: initialSlots }: { slots: Ow
             </Button>
           </div>
           {date && (
-            <p className="text-xs text-muted-foreground">Selected: {formatDateLabel(toDateInputValue(date))}</p>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Selected: {formatDateLabel(toDateInputValue(date))}</p>
+              {(() => {
+                const sameDaySlots = slots.filter((s) => s.date === toDateInputValue(date));
+                if (sameDaySlots.length === 0) return null;
+                return (
+                  <div className="rounded-md border border-border bg-muted/40 p-2 text-xs">
+                    <p className="font-medium text-muted-foreground mb-1">Already listed this day:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {sameDaySlots.map((s) => (
+                        <span key={s.id} className="rounded-full border border-border bg-background px-2 py-0.5">
+                          {s.startTime}–{s.endTime}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           )}
         </div>
 

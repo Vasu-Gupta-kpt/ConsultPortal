@@ -38,3 +38,15 @@ export function formatDateLabel(value: string): string {
 export function getPublicStorageUrl(bucket: string, path: string): string {
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`
 }
+
+// Same-day interval overlap check (start inclusive, end exclusive -- so a
+// 18:00-19:00 slot and a 19:00-20:00 slot are back-to-back, not clashing).
+// Mirrors the DB-level EXCLUDE constraint in
+// supabase/migrations/*_no_overlapping_slots.sql, giving immediate
+// client-side feedback instead of a raw Postgres error.
+export function slotsOverlap(
+  a: { date: string; startTime: string; endTime: string },
+  b: { date: string; startTime: string; endTime: string }
+): boolean {
+  return a.date === b.date && a.startTime < b.endTime && b.startTime < a.endTime
+}

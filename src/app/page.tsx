@@ -1,17 +1,15 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { BookOpen, Users, TrendingUp, Award, ArrowRight, CheckCircle2, GraduationCap } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/server";
 
 const stats = [
   { label: "Total Cases", value: "120+" },
-  { label: "Active Students", value: "245" },
-  { label: "Practice Sessions", value: "1,800+" }
+  { label: "Active Students", value: "500+" },
+  { label: "Practice Sessions", value: "100+" }
 ];
 
 const features = [
@@ -59,17 +57,7 @@ const features = [
   },
 ];
 
-export default async function HomePage() {
-  // Signed-in visitors never see the marketing page -- straight into the
-  // app. /dashboard's (app)/layout.tsx gate takes it from there: bounces to
-  // /onboarding if profiles.year is still null, otherwise shows the real
-  // dashboard. This is what actually funnels a first-time signup into
-  // filling out their profile, rather than leaving them stranded here.
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}

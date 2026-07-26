@@ -85,7 +85,15 @@ function slotMatchesFilters(
   return true;
 }
 
-export default function PeerPracticeBrowser({ students }: { students: PeerListItem[] }) {
+export type OwnSlotSummary = { date: string; startTime: string; endTime: string };
+
+export default function PeerPracticeBrowser({
+  students,
+  ownSlots,
+}: {
+  students: PeerListItem[];
+  ownSlots: OwnSlotSummary[];
+}) {
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState<YearFilter>("all");
   const [locationFilter, setLocationFilter] = useState<Set<SlotLocation>>(new Set());
@@ -228,7 +236,7 @@ export default function PeerPracticeBrowser({ students }: { students: PeerListIt
             Find batchmates and seniors to practice mock case interviews.
           </p>
         </div>
-        <AddSlotButton />
+        <AddSlotButton existingSlots={ownSlots} />
       </div>
 
       {/* Filters */}

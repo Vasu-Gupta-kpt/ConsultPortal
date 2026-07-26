@@ -16,7 +16,7 @@ export default async function PeerPracticePage() {
 
   const todayIso = toDateInputValue(new Date());
 
-  const [{ data: profiles, error }, { data: bookedSlotRows }] = await Promise.all([
+  const [{ data: profiles, error }, { data: bookedSlotRows }, { data: ownSlotsRaw }] = await Promise.all([
     supabase
       .from("profiles")
       .select("*, availability_slots(*)")
@@ -25,6 +25,10 @@ export default async function PeerPracticePage() {
       .filter("availability_slots.slot_date", "gte", todayIso)
       .order("full_name"),
     supabase.rpc("booked_slot_ids"),
+    supabase
+      .from("availability_slots")
+      .select("slot_date, start_time, end_time")
+      .eq("profile_id", user.id),
   ]);
 
   if (error) {
@@ -60,5 +64,11 @@ export default async function PeerPracticePage() {
         .sort((a, b) => a.date.localeCompare(b.date)),
     }));
 
-  return <PeerPracticeBrowser students={students} />;
+  const ownSlots = (ownSlotsRaw ?? []).map((s) => ({
+    date: s.slot_date,
+    startTime: s.start_time.slice(0, 5),
+    endTime: s.end_time.slice(0, 5),
+  }));
+
+  return <PeerPracticeBrowser students={students} ownSlots={ownSlots} />;
 }

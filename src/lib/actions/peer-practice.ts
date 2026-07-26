@@ -307,7 +307,16 @@ export async function createAvailabilitySlot(
     end_time: endTime,
     location,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    // 23P01 = exclusion_violation -- the availability_slots_no_time_overlap
+    // constraint (supabase/migrations/*_no_overlapping_slots.sql). The
+    // client already checks for this before submitting (see slotsOverlap
+    // in src/lib/utils.ts); this is the backstop for races/direct calls.
+    if (error.code === "23P01") {
+      return { error: "This clashes with a slot you've already listed." };
+    }
+    return { error: error.message };
+  }
 
   revalidatePath("/profile");
   revalidatePath("/peer-practice");

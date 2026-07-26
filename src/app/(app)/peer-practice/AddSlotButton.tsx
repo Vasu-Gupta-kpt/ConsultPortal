@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { createAvailabilitySlot } from "@/lib/actions/peer-practice";
 import type { SlotLocation } from "@/lib/types";
-import { formatDateLabel, toDateInputValue } from "@/lib/utils";
+import { formatDateLabel, slotsOverlap, toDateInputValue } from "@/lib/utils";
 
 const LOCATIONS: SlotLocation[] = ["NH", "OH", "Annexe", "Library", "LVH", "Tagore"];
 
@@ -23,7 +23,7 @@ const selectClass =
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 
-export default function AddSlotButton() {
+export default function AddSlotButton({ existingSlots }: { existingSlots: { date: string; startTime: string; endTime: string }[] }) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState("18:00");
@@ -43,13 +43,14 @@ export default function AddSlotButton() {
       setError("End time must be after start time.");
       return;
     }
+    const isoDate = toDateInputValue(date);
+    const clash = existingSlots.find((s) => slotsOverlap(s, { date: isoDate, startTime, endTime }));
+    if (clash) {
+      setError(`This clashes with your ${clash.startTime}–${clash.endTime} slot on ${formatDateLabel(clash.date)}.`);
+      return;
+    }
     startTransition(async () => {
-      const result = await createAvailabilitySlot(
-        toDateInputValue(date),
-        startTime,
-        endTime,
-        location
-      );
+      const result = await createAvailabilitySlot(isoDate, startTime, endTime, location);
       if ("error" in result) {
         setError(result.error);
         return;
@@ -139,9 +140,30 @@ export default function AddSlotButton() {
                 </div>
               </div>
               {date && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Selected: {formatDateLabel(toDateInputValue(date))}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground text-center">
+                    Selected: {formatDateLabel(toDateInputValue(date))}
+                  </p>
+                  {(() => {
+                    const isoDate = toDateInputValue(date);
+                    const sameDaySlots = existingSlots.filter((s) => s.date === isoDate);
+                    if (sameDaySlots.length === 0) return null;
+                    return (
+                      <div className="rounded-md border border-border bg-muted/40 p-2 text-xs">
+                        <p className="font-medium text-muted-foreground mb-1 text-center">
+                          Already listed this day:
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-1.5">
+                          {sameDaySlots.map((s, i) => (
+                            <span key={i} className="rounded-full border border-border bg-background px-2 py-0.5">
+                              {s.startTime}–{s.endTime}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
               )}
               {error && <p className="text-sm text-destructive text-center">{error}</p>}
               <Button className="w-full" disabled={isPending} onClick={handleAdd}>
