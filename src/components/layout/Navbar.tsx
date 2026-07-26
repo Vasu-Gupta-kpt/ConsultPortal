@@ -20,9 +20,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 const navLinks = [
+  { href: "/peer-practice", label: "Peer Practice", icon: Users },
   { href: "/cases", label: "Cases", icon: BookOpen },
   { href: "/materials", label: "Materials", icon: GraduationCap },
-  { href: "/peer-practice", label: "Peer Practice", icon: Users },
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
 ];
 
