@@ -674,7 +674,7 @@ function StudentCard({
           <div className="flex items-center gap-1.5">
             {availableSlots > 0 && (
               <Button size="sm" className="h-7 text-xs" onClick={onBook}>
-                Request
+                Available Slots
               </Button>
             )}
             <Button
@@ -683,7 +683,7 @@ function StudentCard({
               className="h-7 text-xs"
               onClick={onAsk}
             >
-              Ask
+              Ask for New Slot
             </Button>
           </div>
         </div>
