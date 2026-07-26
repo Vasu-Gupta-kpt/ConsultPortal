@@ -34,7 +34,7 @@ export async function submitOnboarding(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user || !user.email) {
     redirect("/");
   }
 
@@ -55,17 +55,22 @@ export async function submitOnboarding(
     return { error: "Please enter a valid contact number." };
   }
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      year,
-      hostel,
-      contact_number: contactNumber,
-      room_number: roomNumber || null,
-      specialization: specialization || null,
-      bio: bio || null,
-    })
-    .eq("id", user.id);
+  // Upsert rather than update: on the rare chance the on_auth_user_created
+  // trigger hasn't created this user's profiles row yet (or somehow never
+  // did), an update would silently affect zero rows and this would still
+  // redirect to /dashboard -- which would immediately bounce back here via
+  // the (app) layout gate, looping the student on this form forever.
+  // Upsert guarantees the row exists after this call either way.
+  const { error } = await supabase.from("profiles").upsert({
+    id: user.id,
+    email: user.email,
+    year,
+    hostel,
+    contact_number: contactNumber,
+    room_number: roomNumber || null,
+    specialization: specialization || null,
+    bio: bio || null,
+  });
 
   if (error) {
     return { error: error.message };
