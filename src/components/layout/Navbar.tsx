@@ -77,8 +77,10 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center px-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 mr-8">
+        {/* Logo -- straight to /dashboard when signed in, skipping the
+            homepage's own signed-in redirect (src/app/page.tsx) so this
+            doesn't feel like an extra hop. */}
+        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2 mr-8">
           <Image src="/logo.jpeg" alt="IIM Calcutta Consult Club" width={36} height={36} className="rounded-sm" />
           <span className="font-semibold text-foreground hidden sm:block">
             IIMC <span className="text-primary">Consult Club</span>
