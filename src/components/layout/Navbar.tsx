@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { BookOpen, BarChart3, Users, Menu, X, GraduationCap, ChevronDown, LogIn } from "lucide-react";
+import { BookOpen, BarChart3, Users, Menu, X, GraduationCap, ChevronDown, LogIn, UserRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -187,6 +187,19 @@ export default function Navbar() {
                           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                         </div>
                       </div>
+                      <Link
+                        href="/profile"
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm font-medium transition-colors mt-1",
+                          pathname.startsWith("/profile")
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        )}
+                      >
+                        <UserRound className="h-4 w-4" />
+                        My Profile
+                      </Link>
                       <button
                         onClick={() => { setMobileOpen(false); handleSignOut(); }}
                         className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-muted rounded-md transition-colors mt-1"
