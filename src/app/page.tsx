@@ -11,8 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 const stats = [
   { label: "Total Cases", value: "120+" },
   { label: "Active Students", value: "245" },
-  { label: "Practice Sessions", value: "1,800+" },
-  { label: "Placements", value: "MBB & Big 4" },
+  { label: "Practice Sessions", value: "1,800+" }
 ];
 
 const features = [
@@ -25,8 +24,8 @@ const features = [
     cta: "Browse Cases",
     highlights: [
       "Guesstimate, Profitability, Market Entry & more",
-      "Filter by MBB, Bain, Big 4",
-      "LeetCode-style progress tracking",
+      "Filter by Company",
+      "Real-time progress tracking",
     ],
     badge: "120+ Cases",
   },
@@ -38,7 +37,7 @@ const features = [
     href: "/materials",
     cta: "View Materials",
     highlights: [
-      "Official IIMC Casebook 2024",
+      "Official IIMC Casebook",
       "Framework guides & industry notes",
       "Video walkthroughs",
     ],
@@ -52,9 +51,9 @@ const features = [
     href: "/peer-practice",
     cta: "Find Partners",
     highlights: [
-      "Filter by year & expertise",
+      "Filter by year",
       "Book available slots instantly",
-      "Rate & review sessions",
+      "Ask for new slots",
     ],
     badge: "Book Mocks",
   },
@@ -70,10 +69,6 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (user) {
-    redirect("/dashboard");
-  }
 
   return (
     <div className="flex flex-col">
@@ -91,7 +86,7 @@ export default async function HomePage() {
           <p className="text-lg text-white/80 max-w-xl mx-auto mb-8">
             IIMC Consult Club is a case-interview prep platform built by and for IIM Calcutta
             Consulting Club students. Practice cases, learn from seniors, and book mock
-            interviews — everything you need to crack MBB and Big 4 interviews, all in one place.
+            interviews - everything you need to crack interviews, all in one place.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link
@@ -113,7 +108,7 @@ export default async function HomePage() {
       {/* Stats bar */}
       <section className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
+          <div className="grid grid-cols-2 md:grid-cols-3 divide-x divide-border">
             {stats.map(({ label, value }) => (
               <div key={label} className="text-center px-4 py-2">
                 <p className="text-xl md:text-2xl font-bold text-primary">{value}</p>

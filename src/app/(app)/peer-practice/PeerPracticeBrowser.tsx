@@ -141,19 +141,27 @@ export default function PeerPracticeBrowser({ students }: { students: PeerListIt
 
   const filtered = useMemo(
     () =>
-      studentsWithLiveStatus.filter((s) => {
-        const matchesSearch =
-          !search ||
-          s.name.toLowerCase().includes(search.toLowerCase()) ||
-          s.tags.some((t) => t.toLowerCase().includes(search.toLowerCase())) ||
-          (s.specialization?.toLowerCase().includes(search.toLowerCase()) ?? false);
-        const matchesYear = yearFilter === "all" || s.year.toString() === yearFilter;
-        const hasMatchingSlot =
-          locationFilter.size === 0 && timeFilter.size === 0
-            ? true
-            : s.availability.some((sl) => slotMatchesFilters(sl, locationFilter, timeFilter));
-        return matchesSearch && matchesYear && hasMatchingSlot;
-      }),
+      studentsWithLiveStatus
+        .filter((s) => {
+          const matchesSearch =
+            !search ||
+            s.name.toLowerCase().includes(search.toLowerCase()) ||
+            s.tags.some((t) => t.toLowerCase().includes(search.toLowerCase())) ||
+            (s.specialization?.toLowerCase().includes(search.toLowerCase()) ?? false);
+          const matchesYear = yearFilter === "all" || s.year.toString() === yearFilter;
+          const hasMatchingSlot =
+            locationFilter.size === 0 && timeFilter.size === 0
+              ? true
+              : s.availability.some((sl) => slotMatchesFilters(sl, locationFilter, timeFilter));
+          return matchesSearch && matchesYear && hasMatchingSlot;
+        })
+        // Students with the most open slots surface first -- they're the
+        // easiest to actually get a session with.
+        .sort(
+          (a, b) =>
+            b.availability.filter((sl) => !sl.isBooked).length -
+            a.availability.filter((sl) => !sl.isBooked).length
+        ),
     [studentsWithLiveStatus, search, yearFilter, locationFilter, timeFilter]
   );
 

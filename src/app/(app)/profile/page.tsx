@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { toDateInputValue } from "@/lib/utils";
 import type { AvailabilitySlotRow, BookingStatus, ProfileRow, SlotLocation } from "@/lib/types";
 import ProfileEditor from "./ProfileEditor";
 import AvailabilityManager, { type OwnSlot } from "./AvailabilityManager";
@@ -101,6 +102,12 @@ export default async function ProfilePage() {
     })
     .sort((a, b) => a.date.localeCompare(b.date));
 
+  // Past slots nobody ever booked are just clutter -- drop them from "My
+  // Availability". A past slot that WAS booked stays (still relevant: it's
+  // what the confirmed-session history/contact info refers to).
+  const todayIso = toDateInputValue(new Date());
+  const visibleSlots = mySlots.filter((s) => s.date >= todayIso || s.bookings.length > 0);
+
   const myBookings: OutgoingBooking[] = ((myBookingsRaw ?? []) as unknown as OutgoingBookingRow[])
     .filter((b) => b.availability_slots !== null)
     .map((b) => {
@@ -167,7 +174,7 @@ export default async function ProfilePage() {
       <ProfileEditor profile={profile as ProfileRow} />
       <MyCalendar sessions={confirmedSessions} />
       <SlotRequestsInbox requests={incomingSlotRequests} />
-      <AvailabilityManager slots={mySlots} />
+      <AvailabilityManager slots={visibleSlots} />
       <MyBookings bookings={myBookings} />
     </div>
   );
