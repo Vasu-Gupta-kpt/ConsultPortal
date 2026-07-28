@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
+import SignInCta from "./SignInCta";
 
 const stats = [
   { label: "Total Cases", value: "120+" },
@@ -20,7 +21,6 @@ const features = [
     title: "Case Library",
     description:
       "Structured cases tagged by difficulty, type, industry, company, and framework. Solve, track progress, and share your approach.",
-    href: "/cases",
     cta: "Browse Cases",
     highlights: [
       "Guesstimate, Profitability, Market Entry & more",
@@ -34,7 +34,6 @@ const features = [
     title: "Learning Materials",
     description:
       "Industry notes, frameworks, casebooks, and consulting skill guides curated by placed seniors and the club.",
-    href: "/materials",
     cta: "View Materials",
     highlights: [
       "Official IIMC Casebook",
@@ -48,7 +47,6 @@ const features = [
     title: "Peer Practice",
     description:
       "Find batchmates and seniors on campus for mock interviews. Filter by year, specialization, and book available time slots.",
-    href: "/peer-practice",
     cta: "Find Partners",
     highlights: [
       "Filter by year",
@@ -93,18 +91,16 @@ export default async function HomePage() {
             interviews - everything you need to crack interviews, all in one place.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Link
-              href="/cases"
+            <SignInCta
               className={cn(buttonVariants({ size: "lg" }), "bg-white text-primary hover:bg-white/90 font-semibold")}
             >
               Start Practicing
-            </Link>
-            <Link
-              href="/peer-practice"
+            </SignInCta>
+            <SignInCta
               className={cn(buttonVariants({ size: "lg", variant: "outline" }), "border-white/40 text-white bg-white/10 hover:bg-white/20")}
             >
               Find a Partner
-            </Link>
+            </SignInCta>
           </div>
         </div>
       </section>
@@ -132,7 +128,7 @@ export default async function HomePage() {
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
-          {features.map(({ icon: Icon, title, description, href, cta, highlights, badge }) => (
+          {features.map(({ icon: Icon, title, description, cta, highlights, badge }) => (
             <Card key={title} className="card-hover border-border flex flex-col">
               <CardContent className="p-6 flex flex-col flex-1">
                 <div className="flex items-start justify-between mb-4">
@@ -153,10 +149,10 @@ export default async function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <Link href={href} className={cn(buttonVariants(), "w-full gap-1.5")}>
+                <SignInCta className={cn(buttonVariants(), "w-full gap-1.5")}>
                   {cta}
                   <ArrowRight className="h-4 w-4" />
-                </Link>
+                </SignInCta>
               </CardContent>
             </Card>
           ))}
@@ -186,9 +182,9 @@ export default async function HomePage() {
               <TrendingUp className="h-8 w-8 text-primary mx-auto mb-1" />
               <p className="text-xs text-muted-foreground">Streaks</p>
             </div>
-            <Link href="/dashboard" className={cn(buttonVariants({ size: "lg" }))}>
+            <SignInCta className={cn(buttonVariants({ size: "lg" }))}>
               View Dashboard
-            </Link>
+            </SignInCta>
           </div>
         </div>
       </section>
