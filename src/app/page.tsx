@@ -5,9 +5,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn, isSafeNextPath } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import SignInCta from "./SignInCta";
+import AutoSignIn from "./AutoSignIn";
 
 const stats = [
   { label: "Total Cases", value: "120+" },
@@ -57,9 +58,17 @@ const features = [
   },
 ];
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next: rawNext } = await searchParams;
+  const next = isSafeNextPath(rawNext) ? rawNext : undefined;
+
   // Signed-in visitors never see the marketing page -- straight into the
-  // app. /dashboard's (app)/layout.tsx gate takes it from there: bounces to
+  // app (or back to whatever deep link they followed here, if any).
+  // /dashboard's (app)/layout.tsx gate takes it from there: bounces to
   // /onboarding if profiles.year is still null, otherwise shows the real
   // dashboard. This is what actually funnels a first-time signup into
   // filling out their profile, rather than leaving them stranded here.
@@ -69,7 +78,14 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/dashboard");
+    redirect(next ?? "/dashboard");
+  }
+
+  // Arrived here via `next` (src/proxy.ts redirected a signed-out visit to
+  // a protected page) -- skip the marketing page entirely and go straight
+  // into Google sign-in.
+  if (next) {
+    return <AutoSignIn next={next} />;
   }
 
   return (
@@ -78,7 +94,7 @@ export default async function HomePage() {
       <section className="hero-gradient text-white">
         <div className="container mx-auto px-4 py-20 text-center">
           <div className="flex justify-center mb-6">
-            <Image src="/logo.jpeg" alt="IIM Calcutta Consult Club" width={140} height={140} className="drop-shadow-lg" />
+            <Image src="/logo.png" alt="IIM Calcutta Consult Club" width={140} height={140} className="drop-shadow-lg" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
             IIMC Consult Club

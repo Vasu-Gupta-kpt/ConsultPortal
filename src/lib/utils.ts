@@ -50,3 +50,10 @@ export function slotsOverlap(
 ): boolean {
   return a.date === b.date && a.startTime < b.endTime && b.startTime < a.endTime
 }
+
+// Guards the `next` redirect param (see src/proxy.ts, src/app/page.tsx,
+// src/app/auth/callback/route.ts) against being turned into an open
+// redirect -- must be an internal, single-slash path only.
+export function isSafeNextPath(next: string | undefined | null): next is string {
+  return !!next && next.startsWith("/") && !next.startsWith("//")
+}

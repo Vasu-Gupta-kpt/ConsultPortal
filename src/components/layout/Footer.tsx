@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="border-t border-border bg-card mt-auto">
       <div className="container mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-2.5">
-          <Image src="/logo.jpeg" alt="IIM Calcutta Consult Club" width={24} height={24} className="rounded-sm" />
+          <Image src="/logo.png" alt="IIM Calcutta Consult Club" width={24} height={24} className="rounded-sm" />
           <span>IIM Calcutta Consult Club &copy; {new Date().getFullYear()}</span>
         </div>
         <div className="flex items-center gap-4">

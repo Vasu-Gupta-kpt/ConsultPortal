@@ -81,7 +81,7 @@ export default function Navbar() {
             homepage's own signed-in redirect (src/app/page.tsx) so this
             doesn't feel like an extra hop. */}
         <Link href={"/"} className="flex items-center gap-2 mr-8">
-          <Image src="/logo.jpeg" alt="IIM Calcutta Consult Club" width={36} height={36} className="rounded-sm" />
+          <Image src="/logo.png" alt="IIM Calcutta Consult Club" width={36} height={36} className="rounded-sm" />
           <span className="font-semibold text-foreground hidden sm:block">
             IIMC <span className="text-primary">Consult Club</span>
           </span>
