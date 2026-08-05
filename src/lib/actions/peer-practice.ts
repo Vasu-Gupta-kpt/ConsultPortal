@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, siteUrl } from "@/lib/email";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { createCalendarEvent, deleteCalendarEvent, getFreshAccessToken } from "@/lib/google-calendar";
 import type { SlotLocation } from "@/lib/types";
@@ -103,7 +103,7 @@ export async function requestBooking(slotId: string): Promise<RequestResult> {
     void sendEmail({
       to: owner.email,
       subject: "New Peer Practice request",
-      html: `<p><strong>${requesterName}</strong> has requested to book your practice slot on ${slotDescription}.</p><p>Accept or decline it from your profile page.</p>`,
+      html: `<p><strong>${requesterName}</strong> has requested to book your practice slot on ${slotDescription}.</p><p><a href="${siteUrl("/profile")}">Accept or decline it here</a>.</p>`,
     });
 
     if (owner.contact_number) {
@@ -160,7 +160,7 @@ export async function acceptBooking(bookingId: string): Promise<RequestResult> {
     void sendEmail({
       to: requesterProfile.email,
       subject: "Your Peer Practice request was accepted",
-      html: `<p><strong>${ownerName}</strong> accepted your request for ${slotDescription}.</p>`,
+      html: `<p><strong>${ownerName}</strong> accepted your request for ${slotDescription}.</p><p><a href="${siteUrl("/profile")}">View it on your profile</a>.</p>`,
     });
 
     if (requesterProfile.contact_number) {
@@ -191,7 +191,7 @@ export async function acceptBooking(bookingId: string): Promise<RequestResult> {
       void sendEmail({
         to: declinedRequester.email,
         subject: "Your Peer Practice request was declined",
-        html: `<p>This slot was confirmed with another student. Feel free to browse other available slots on Peer Practice.</p>`,
+        html: `<p>This slot was confirmed with another student.</p><p><a href="${siteUrl("/peer-practice")}">Browse other available slots</a>.</p>`,
       });
     }
   }
@@ -216,7 +216,7 @@ export async function declineBooking(bookingId: string): Promise<SimpleResult> {
     void sendEmail({
       to: requesterProfile.email,
       subject: "Your Peer Practice request was declined",
-      html: `<p>Your practice request was declined. Feel free to browse other available slots on Peer Practice.</p>`,
+      html: `<p>Your practice request was declined.</p><p><a href="${siteUrl("/peer-practice")}">Browse other available slots</a>.</p>`,
     });
   }
 
@@ -266,7 +266,7 @@ export async function cancelBooking(bookingId: string): Promise<RequestResult> {
         void sendEmail({
           to: otherProfile.email,
           subject: "A Peer Practice session was cancelled",
-          html: `<p>Your practice session${slot ? ` on ${slotDescription}` : ""} was cancelled.</p>`,
+          html: `<p>Your practice session${slot ? ` on ${slotDescription}` : ""} was cancelled.</p><p><a href="${siteUrl("/peer-practice")}">Browse other available slots</a>.</p>`,
         });
 
         if (otherProfile.contact_number) {
@@ -385,7 +385,7 @@ export async function askForSlot(seniorId: string, message: string): Promise<Req
       subject: "New Peer Practice request",
       html: `<p><strong>${requesterName}</strong> would like to book a Peer Practice session with you.</p>${
         trimmedMessage ? `<p>"${trimmedMessage}"</p>` : ""
-      }<p>Add a slot whenever works for you from your profile page.</p>`,
+      }<p><a href="${siteUrl("/profile")}">Add a slot whenever works for you</a>.</p>`,
     });
 
     if (senior.contact_number) {

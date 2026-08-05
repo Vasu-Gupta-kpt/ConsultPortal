@@ -40,3 +40,10 @@ export async function sendEmail({
     console.error("sendEmail threw", err);
   }
 }
+
+// Emails render outside the app, so a relative link like "/profile" wouldn't
+// resolve -- this turns it into an absolute URL against the deployed site.
+export function siteUrl(path: string): string {
+  const base = process.env.SITE_URL ?? "http://localhost:3000";
+  return `${base}${path}`;
+}
