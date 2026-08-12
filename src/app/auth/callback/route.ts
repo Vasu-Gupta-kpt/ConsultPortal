@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isSafeNextPath } from "@/lib/utils";
 
 const ALLOWED_DOMAINS = ["iimcal.ac.in", "email.iimcal.ac.in"];
@@ -37,7 +38,16 @@ export async function GET(request: Request) {
   // Google Calendar" from /profile.
   const refreshToken = data.session?.provider_refresh_token;
   if (refreshToken && user) {
-    const { error: tokenError } = await supabase
+    // Admin (service-role) client, not the request-scoped one above -- right
+    // after exchangeCodeForSession() in a Route Handler, the freshly
+    // established session doesn't reliably carry over to that same
+    // request's subsequent RLS-scoped .from() calls (auth.getUser() above
+    // sees it fine since it's a different code path, but the RLS policy's
+    // auth.uid() was coming back unmatched here, failing with 42501 even
+    // though the policy itself is correct). `user` is already verified and
+    // domain-checked above, so bypassing RLS for this one write is safe.
+    const admin = createAdminClient();
+    const { error: tokenError } = await admin
       .from("google_calendar_tokens")
       .upsert({ profile_id: user.id, refresh_token: refreshToken, updated_at: new Date().toISOString() });
 
