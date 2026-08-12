@@ -91,24 +91,24 @@ export default async function HomePage({
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="hero-gradient text-white">
+      <section className="hero-gradient text-blue">
         <div className="container mx-auto px-4 py-20 text-center">
           <div className="flex justify-center mb-6">
-            <Image src="/logo.png" alt="IIM Calcutta Consult Club" width={140} height={140} className="drop-shadow-lg" />
+            <Image src="/logo.png" alt="IIM Calcutta Consult Club" width={200} height={200} className="drop-shadow-lg" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
             IIMC Consult Club
             <br />
             Your Consulting Prep Platform
           </h1>
-          <p className="text-lg text-white/80 max-w-xl mx-auto mb-8">
+          <p className="text-lg text-blue/80 max-w-xl mx-auto mb-8">
             IIMC Consult Club is a case-interview prep platform built by and for IIM Calcutta
             Consulting Club students. Practice cases, learn from seniors, and book mock
             interviews - everything you need to crack interviews, all in one place.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <SignInCta
-              className={cn(buttonVariants({ size: "lg" }), "bg-white text-primary hover:bg-white/90 font-semibold")}
+              className={cn(buttonVariants({ size: "lg" }), "bg-white text-blue hover:bg-primary/90 font-semibold")}
             >
               Start Practicing
             </SignInCta>

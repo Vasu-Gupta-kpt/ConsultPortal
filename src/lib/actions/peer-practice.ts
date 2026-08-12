@@ -102,7 +102,7 @@ export async function requestBooking(slotId: string): Promise<RequestResult> {
 
     void sendEmail({
       to: owner.email,
-      subject: "New Peer Practice request",
+      subject: "Consulting Portal - New Peer Practice request",
       html: `<p><strong>${requesterName}</strong> has requested to book your practice slot on ${slotDescription}.</p><p><a href="${siteUrl("/profile")}">Accept or decline it here</a>.</p>`,
     });
 
@@ -159,7 +159,7 @@ export async function acceptBooking(bookingId: string): Promise<RequestResult> {
 
     void sendEmail({
       to: requesterProfile.email,
-      subject: "Your Peer Practice request was accepted",
+      subject: "Consulting Portal - Your Peer Practice request was accepted",
       html: `<p><strong>${ownerName}</strong> accepted your request for ${slotDescription}.</p><p><a href="${siteUrl("/profile")}">View it on your profile</a>.</p>`,
     });
 
@@ -190,7 +190,7 @@ export async function acceptBooking(bookingId: string): Promise<RequestResult> {
     if (declinedRequester) {
       void sendEmail({
         to: declinedRequester.email,
-        subject: "Your Peer Practice request was declined",
+        subject: "Consulting Portal - Your Peer Practice request was declined",
         html: `<p>This slot was confirmed with another student.</p><p><a href="${siteUrl("/peer-practice")}">Browse other available slots</a>.</p>`,
       });
     }
@@ -215,7 +215,7 @@ export async function declineBooking(bookingId: string): Promise<SimpleResult> {
   if (requesterProfile) {
     void sendEmail({
       to: requesterProfile.email,
-      subject: "Your Peer Practice request was declined",
+      subject: "Consulting Portal - Your Peer Practice request was declined",
       html: `<p>Your practice request was declined.</p><p><a href="${siteUrl("/peer-practice")}">Browse other available slots</a>.</p>`,
     });
   }
@@ -265,7 +265,7 @@ export async function cancelBooking(bookingId: string): Promise<RequestResult> {
         const slotDescription = slot ? formatSlot(slot) : "your session";
         void sendEmail({
           to: otherProfile.email,
-          subject: "A Peer Practice session was cancelled",
+          subject: "Consulting Portal - A Peer Practice session was cancelled",
           html: `<p>Your practice session${slot ? ` on ${slotDescription}` : ""} was cancelled.</p><p><a href="${siteUrl("/peer-practice")}">Browse other available slots</a>.</p>`,
         });
 
@@ -376,16 +376,16 @@ export async function askForSlot(seniorId: string, message: string): Promise<Req
 
   if (senior) {
     const requesterName = requesterProfile?.full_name ?? "A classmate";
-    const waMessage = `Hi! I'd love to book a Peer Practice session with you sometime.${
+    const waMessage = `Hi! I'd love to book a Peer Practice session with you.${
       trimmedMessage ? ` ${trimmedMessage}` : ""
     } Could you add a slot on the IIMC Consult Club portal whenever works for you? -${requesterName}`;
 
     void sendEmail({
       to: senior.email,
-      subject: "New Peer Practice request",
-      html: `<p><strong>${requesterName}</strong> would like to book a Peer Practice session with you.</p>${
+      subject: "Consulting Portal - New Slot Addition request Peer Practice",
+      html: `<p>Hi! I'd love to book a Peer Practice session with you.</p>${
         trimmedMessage ? `<p>"${trimmedMessage}"</p>` : ""
-      }<p><a href="${siteUrl("/profile")}">Add a slot whenever works for you</a>.</p>`,
+      }<p><a href="${siteUrl("/profile")}">Click here to add slots</a>.</p><p><strong>-${requesterName}</strong></p>`,
     });
 
     if (senior.contact_number) {
