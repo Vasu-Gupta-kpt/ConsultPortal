@@ -158,10 +158,11 @@ export default function CasesBrowser({
         </Button>
       </div>
 
-      <div className="flex gap-6">
-        {/* Filter sidebar */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Filter sidebar -- full-width block above the list on mobile,
+            fixed-width sidebar beside it from md up. */}
         {showFilters && (
-          <aside className="w-56 flex-shrink-0 hidden md:block">
+          <aside className="w-full md:w-56 flex-shrink-0">
             <Card>
               <CardContent className="p-4 space-y-5">
                 <FilterSection
