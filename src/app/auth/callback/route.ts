@@ -37,10 +37,15 @@ export async function GET(request: Request) {
   // Google Calendar" from /profile.
   const refreshToken = data.session?.provider_refresh_token;
   if (refreshToken && user) {
-    await supabase
+    const { error: tokenError } = await supabase
       .from("google_calendar_tokens")
       .upsert({ profile_id: user.id, refresh_token: refreshToken, updated_at: new Date().toISOString() });
-    await supabase.from("profiles").update({ google_calendar_connected: true }).eq("id", user.id);
+
+    if (tokenError) {
+      console.error("Failed to save Google Calendar token", tokenError);
+    } else {
+      await supabase.from("profiles").update({ google_calendar_connected: true }).eq("id", user.id);
+    }
   }
 
   return NextResponse.redirect(`${origin}${next}`);
