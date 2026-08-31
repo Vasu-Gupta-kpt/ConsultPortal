@@ -417,8 +417,6 @@ export type Database = {
           id: string
           is_admin: boolean
           program: Database["public"]["Enums"]["program"] | null
-          rating: number | null
-          review_count: number
           room_number: string | null
           specialization: string | null
           tags: string[]
@@ -437,8 +435,6 @@ export type Database = {
           id: string
           is_admin?: boolean
           program?: Database["public"]["Enums"]["program"] | null
-          rating?: number | null
-          review_count?: number
           room_number?: string | null
           specialization?: string | null
           tags?: string[]
@@ -457,8 +453,6 @@ export type Database = {
           id?: string
           is_admin?: boolean
           program?: Database["public"]["Enums"]["program"] | null
-          rating?: number | null
-          review_count?: number
           room_number?: string | null
           specialization?: string | null
           tags?: string[]

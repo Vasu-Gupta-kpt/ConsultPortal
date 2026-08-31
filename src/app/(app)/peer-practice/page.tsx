@@ -50,8 +50,6 @@ export default async function PeerPracticePage() {
       bio: p.bio ?? "",
       contactNumber: p.contact_number,
       roomNumber: p.room_number,
-      rating: p.rating ?? 0,
-      reviewCount: p.review_count,
       tags: p.tags,
       availability: p.availability_slots
         .map((slot) => ({

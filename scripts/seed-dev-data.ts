@@ -66,8 +66,6 @@ type MockStudent = {
   bio: string;
   contactNumber: string;
   roomNumber?: string;
-  rating: number;
-  reviewCount: number;
   tags: string[];
   availability: MockSlot[];
 };
@@ -95,8 +93,6 @@ const mockStudents: MockStudent[] = [
     bio: "Prepped for MBB. Cleared BCG final round. Happy to help with profitability and M&A cases.",
     contactNumber: "+91 90000 00001",
     roomNumber: "214",
-    rating: 4.8,
-    reviewCount: 24,
     tags: ["Profitability", "M&A", "BCG style"],
     availability: [
       { daysFromToday: 3, startTime: "18:00", endTime: "19:00", location: "NH", isBooked: false },
@@ -113,8 +109,6 @@ const mockStudents: MockStudent[] = [
     bio: "Placed at McKinsey. Specialise in market entry and growth strategy cases. McKinsey style interviewer.",
     contactNumber: "+91 90000 00002",
     roomNumber: "108",
-    rating: 4.9,
-    reviewCount: 31,
     tags: ["Market Entry", "Growth Strategy", "McKinsey style"],
     availability: [
       { daysFromToday: 4, startTime: "19:00", endTime: "20:00", location: "Annexe", isBooked: false },
@@ -129,8 +123,6 @@ const mockStudents: MockStudent[] = [
     hostel: "Ramanujan Hostel(OH)",
     bio: "First year, practicing for placements. Looking for mock interview partners for guesstimate and ops cases.",
     contactNumber: "+91 90000 00003",
-    rating: 4.5,
-    reviewCount: 8,
     tags: ["Guesstimate", "Operations"],
     availability: [
       { daysFromToday: 3, startTime: "21:00", endTime: "22:00", location: "OH", isBooked: false },
@@ -145,8 +137,6 @@ const mockStudents: MockStudent[] = [
     bio: "Background in engineering. Strong at operations and cost reduction cases. Let's practice together!",
     contactNumber: "+91 90000 00004",
     roomNumber: "312",
-    rating: 4.6,
-    reviewCount: 12,
     tags: ["Operations", "Cost Reduction", "Manufacturing"],
     availability: [
       { daysFromToday: 5, startTime: "18:00", endTime: "19:00", location: "Annexe", isBooked: false },
@@ -163,8 +153,6 @@ const mockStudents: MockStudent[] = [
     bio: "Placed at Deloitte S&O. Expert at operations, supply chain, and pricing cases.",
     contactNumber: "+91 90000 00005",
     roomNumber: "45",
-    rating: 4.7,
-    reviewCount: 19,
     tags: ["Operations", "Pricing", "Deloitte style"],
     availability: [
       { daysFromToday: 4, startTime: "20:00", endTime: "21:00", location: "NH", isBooked: false },
@@ -179,8 +167,6 @@ const mockStudents: MockStudent[] = [
     specialization: "Healthcare & Life Sciences",
     bio: "Healthcare background + MBA. Great for healthcare, pharma, and FMCG cases. Bain interviewer style.",
     contactNumber: "+91 90000 00006",
-    rating: 4.8,
-    reviewCount: 17,
     tags: ["Healthcare", "Pharma", "Bain style"],
     availability: [
       { daysFromToday: 3, startTime: "19:00", endTime: "20:00", location: "Tagore", isBooked: false },
@@ -232,8 +218,6 @@ async function main() {
         specialization: student.specialization ?? null,
         bio: student.bio,
         tags: student.tags,
-        rating: student.rating,
-        review_count: student.reviewCount,
       })
       .eq("id", userId);
 

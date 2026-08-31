@@ -74,8 +74,6 @@ export interface ProfileRow {
   google_calendar_connected: boolean;
   is_admin: boolean;
   tags: string[];
-  rating: number | null;
-  review_count: number;
   created_at: string;
   updated_at: string;
 }

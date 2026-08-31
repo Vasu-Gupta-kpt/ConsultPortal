@@ -3,7 +3,6 @@
 import { useState, useMemo, useTransition } from "react";
 import {
   Search,
-  Star,
   MapPin,
   Calendar as CalendarIcon,
   Clock,
@@ -49,8 +48,6 @@ export type PeerListItem = {
   bio: string;
   contactNumber: string | null;
   roomNumber: string | null;
-  rating: number;
-  reviewCount: number;
   tags: string[];
   availability: PeerSlot[];
 };
@@ -700,11 +697,6 @@ function StudentCard({
 
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-              <span className="font-medium text-foreground">{student.rating.toFixed(1)}</span>
-              <span>({student.reviewCount})</span>
-            </span>
             {displayCount > 0 ? (
               <span className="font-medium text-emerald-600">
                 {displayCount} slot{displayCount !== 1 ? "s" : ""} free
