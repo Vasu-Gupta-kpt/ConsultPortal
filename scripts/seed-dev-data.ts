@@ -59,7 +59,8 @@ type MockSlot = {
 
 type MockStudent = {
   name: string;
-  year: 1 | 2;
+  program: string;
+  batchNumber: number;
   hostel: string;
   specialization?: string;
   bio: string;
@@ -87,7 +88,8 @@ function dateFromToday(daysFromToday: number): string {
 const mockStudents: MockStudent[] = [
   {
     name: "Rahul Verma",
-    year: 2,
+    program: "PGP",
+    batchNumber: 62,
     hostel: "New Hostel",
     specialization: "Finance & Strategy",
     bio: "Prepped for MBB. Cleared BCG final round. Happy to help with profitability and M&A cases.",
@@ -104,7 +106,8 @@ const mockStudents: MockStudent[] = [
   },
   {
     name: "Ananya Singh",
-    year: 2,
+    program: "PGP",
+    batchNumber: 62,
     hostel: "Lake View Hostel",
     specialization: "Marketing & Strategy",
     bio: "Placed at McKinsey. Specialise in market entry and growth strategy cases. McKinsey style interviewer.",
@@ -121,7 +124,8 @@ const mockStudents: MockStudent[] = [
   },
   {
     name: "Karthik Nair",
-    year: 1,
+    program: "PGP",
+    batchNumber: 63,
     hostel: "Ramanujan Hostel(OH)",
     bio: "First year, practicing for placements. Looking for mock interview partners for guesstimate and ops cases.",
     contactNumber: "+91 90000 00003",
@@ -135,7 +139,8 @@ const mockStudents: MockStudent[] = [
   },
   {
     name: "Sneha Patel",
-    year: 1,
+    program: "PGP",
+    batchNumber: 63,
     hostel: "Tagore",
     bio: "Background in engineering. Strong at operations and cost reduction cases. Let's practice together!",
     contactNumber: "+91 90000 00004",
@@ -151,7 +156,8 @@ const mockStudents: MockStudent[] = [
   },
   {
     name: "Vikram Gupta",
-    year: 2,
+    program: "PGP",
+    batchNumber: 62,
     hostel: "Tata Hall",
     specialization: "Operations & Supply Chain",
     bio: "Placed at Deloitte S&O. Expert at operations, supply chain, and pricing cases.",
@@ -167,7 +173,8 @@ const mockStudents: MockStudent[] = [
   },
   {
     name: "Meera Iyer",
-    year: 2,
+    program: "PGP",
+    batchNumber: 62,
     hostel: "Annexe",
     specialization: "Healthcare & Life Sciences",
     bio: "Healthcare background + MBA. Great for healthcare, pharma, and FMCG cases. Bain interviewer style.",
@@ -217,7 +224,8 @@ async function main() {
     const { error: profileError } = await admin
       .from("profiles")
       .update({
-        year: student.year,
+        program: student.program,
+        batch_number: student.batchNumber,
         hostel: student.hostel,
         contact_number: student.contactNumber,
         room_number: student.roomNumber ?? null,

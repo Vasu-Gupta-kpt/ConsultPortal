@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { askForSlot, requestBooking } from "@/lib/actions/peer-practice";
-import type { SlotLocation } from "@/lib/types";
-import { cn, formatDateLabel, parseDateInputValue, toDateInputValue } from "@/lib/utils";
+import type { SlotLocation, Program } from "@/lib/types";
+import { cn, formatDateLabel, parseDateInputValue, toDateInputValue, batchLabel } from "@/lib/utils";
 import AddSlotButton from "./AddSlotButton";
 
 export type PeerSlot = {
@@ -42,7 +42,8 @@ export type PeerSlot = {
 export type PeerListItem = {
   id: string;
   name: string;
-  year: 1 | 2;
+  program: Program;
+  batchNumber: number;
   hostel: string;
   specialization: string | null;
   bio: string;
@@ -54,8 +55,16 @@ export type PeerListItem = {
   availability: PeerSlot[];
 };
 
-type YearFilter = "all" | "1" | "2";
 type TimeBucket = "Morning" | "Afternoon" | "Evening" | "Night";
+
+// Stable identity for a (program, batchNumber) pair, used as the filter
+// chip's value -- batches are open-ended, so the chip list is built from
+// whoever's actually in `students` rather than a hardcoded set of options.
+function batchKey(program: Program, batchNumber: number): string {
+  return `${program}::${batchNumber}`;
+}
+
+type BatchOption = { key: string; label: string; program: Program; batchNumber: number };
 
 const LOCATIONS: SlotLocation[] = ["NH", "OH", "Annexe", "Library", "LVH", "Tagore"];
 
@@ -95,7 +104,7 @@ export default function PeerPracticeBrowser({
   ownSlots: OwnSlotSummary[];
 }) {
   const [search, setSearch] = useState("");
-  const [yearFilter, setYearFilter] = useState<YearFilter>("all");
+  const [batchFilter, setBatchFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<Set<SlotLocation>>(new Set());
   const [timeFilter, setTimeFilter] = useState<Set<TimeBucket>>(new Set());
   const [selectedStudent, setSelectedStudent] = useState<PeerListItem | null>(null);
@@ -135,6 +144,27 @@ export default function PeerPracticeBrowser({
     });
   }
 
+  // Built from the raw `students` prop, not the search/filter-narrowed
+  // list -- chip options should represent who's in this dataset at all,
+  // not shrink as the user types in search.
+  const batchOptions = useMemo<BatchOption[]>(() => {
+    const seen = new Map<string, BatchOption>();
+    for (const s of students) {
+      const key = batchKey(s.program, s.batchNumber);
+      if (!seen.has(key)) {
+        seen.set(key, {
+          key,
+          program: s.program,
+          batchNumber: s.batchNumber,
+          label: batchLabel(s.program, s.batchNumber),
+        });
+      }
+    }
+    return [...seen.values()].sort((a, b) =>
+      a.program === b.program ? a.batchNumber - b.batchNumber : a.program.localeCompare(b.program)
+    );
+  }, [students]);
+
   const studentsWithLiveStatus = useMemo(
     () =>
       students.map((s) => ({
@@ -156,12 +186,13 @@ export default function PeerPracticeBrowser({
             s.name.toLowerCase().includes(search.toLowerCase()) ||
             s.tags.some((t) => t.toLowerCase().includes(search.toLowerCase())) ||
             (s.specialization?.toLowerCase().includes(search.toLowerCase()) ?? false);
-          const matchesYear = yearFilter === "all" || s.year.toString() === yearFilter;
+          const matchesBatch =
+            batchFilter === "all" || batchKey(s.program, s.batchNumber) === batchFilter;
           const hasMatchingSlot =
             locationFilter.size === 0 && timeFilter.size === 0
               ? true
               : s.availability.some((sl) => slotMatchesFilters(sl, locationFilter, timeFilter));
-          return matchesSearch && matchesYear && hasMatchingSlot;
+          return matchesSearch && matchesBatch && hasMatchingSlot;
         })
         // Students with the most open slots surface first -- they're the
         // easiest to actually get a session with.
@@ -170,7 +201,7 @@ export default function PeerPracticeBrowser({
             b.availability.filter((sl) => !sl.isBooked).length -
             a.availability.filter((sl) => !sl.isBooked).length
         ),
-    [studentsWithLiveStatus, search, yearFilter, locationFilter, timeFilter]
+    [studentsWithLiveStatus, search, batchFilter, locationFilter, timeFilter]
   );
 
   const dialogStudent = selectedStudent
@@ -252,19 +283,30 @@ export default function PeerPracticeBrowser({
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-            {(["all", "1", "2"] as YearFilter[]).map((y) => (
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-1 flex-wrap">
+            <button
+              onClick={() => setBatchFilter("all")}
+              className={cn(
+                "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                batchFilter === "all"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              All Batches
+            </button>
+            {batchOptions.map((opt) => (
               <button
-                key={y}
-                onClick={() => setYearFilter(y)}
+                key={opt.key}
+                onClick={() => setBatchFilter(opt.key)}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                  yearFilter === y
+                  batchFilter === opt.key
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {y === "all" ? "All Years" : `Year ${y}`}
+                {opt.label}
               </button>
             ))}
           </div>
@@ -387,7 +429,7 @@ export default function PeerPracticeBrowser({
                 <div>
                   <p className="font-medium text-sm">{dialogStudent.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    Year {dialogStudent.year} &bull; {dialogStudent.hostel}
+                    {batchLabel(dialogStudent.program, dialogStudent.batchNumber)} &bull; {dialogStudent.hostel}
                   </p>
                 </div>
               </div>
@@ -523,7 +565,7 @@ export default function PeerPracticeBrowser({
                 <div>
                   <p className="font-medium text-sm">{askStudent.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    Year {askStudent.year} &bull; {askStudent.hostel}
+                    {batchLabel(askStudent.program, askStudent.batchNumber)} &bull; {askStudent.hostel}
                   </p>
                 </div>
               </div>
@@ -611,7 +653,7 @@ function StudentCard({
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{student.name}</p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Year {student.year}</span>
+              <span>{batchLabel(student.program, student.batchNumber)}</span>
               <span>&bull;</span>
               <span className="flex items-center gap-0.5">
                 <MapPin className="h-3 w-3" />

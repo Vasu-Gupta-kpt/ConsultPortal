@@ -1,8 +1,33 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { Program } from "./types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+// Standard English ordinal suffix. The 11/12/13 exception is checked via
+// n % 100 BEFORE the n % 10 switch (11 % 10 === 1 would otherwise wrongly
+// read as "1st" territory).
+function ordinal(n: number): string {
+  const rem100 = n % 100
+  if (rem100 >= 11 && rem100 <= 13) return `${n}th`
+  switch (n % 10) {
+    case 1:
+      return `${n}st`
+    case 2:
+      return `${n}nd`
+    case 3:
+      return `${n}rd`
+    default:
+      return `${n}th`
+  }
+}
+
+// Pure formula, not a lookup table -- so every future batch (64th, 65th, ...)
+// for any program works with zero code changes, no yearly maintenance.
+export function batchLabel(program: Program, batchNumber: number): string {
+  return `${program} ${ordinal(batchNumber)} Batch`
 }
 
 // "yyyy-mm-dd" in local time -- deliberately not toISOString(), which

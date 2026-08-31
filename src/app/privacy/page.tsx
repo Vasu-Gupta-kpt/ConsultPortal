@@ -32,8 +32,8 @@ export default function PrivacyPage() {
               <strong>From Google Sign-In:</strong> your name, email address, and profile photo.
             </li>
             <li>
-              <strong>Profile details you enter:</strong> year, hostel, room number, contact
-              (phone) number, bio, specialization, and tags.
+              <strong>Profile details you enter:</strong> program, batch, hostel, room number,
+              contact (phone) number, bio, specialization, and tags.
             </li>
             <li>
               <strong>Activity on the Portal:</strong> cases you mark solved, approaches you post,

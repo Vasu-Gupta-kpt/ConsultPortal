@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Hostel } from "@/lib/types";
+import { isProgram } from "@/lib/constants";
 
 export type OnboardingState = { error: string } | null;
 
@@ -39,15 +40,19 @@ export async function submitOnboarding(
     redirect("/");
   }
 
-  const year = Number(formData.get("year"));
+  const program = String(formData.get("program") ?? "").trim();
+  const batchNumber = Number(formData.get("batch_number"));
   const hostel = String(formData.get("hostel") ?? "").trim();
   const contactNumber = String(formData.get("contact_number") ?? "").trim();
   const roomNumber = String(formData.get("room_number") ?? "").trim();
   const specialization = String(formData.get("specialization") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
 
-  if (year !== 1 && year !== 2) {
-    return { error: "Please select your year." };
+  if (!isProgram(program)) {
+    return { error: "Please select your program." };
+  }
+  if (!Number.isInteger(batchNumber) || batchNumber <= 0 || batchNumber >= 1000) {
+    return { error: "Please enter a valid batch number." };
   }
   if (!isHostel(hostel)) {
     return { error: "Please select a valid hostel." };
@@ -67,7 +72,8 @@ export async function submitOnboarding(
   const { error } = await supabase
     .from("profiles")
     .update({
-      year,
+      program,
+      batch_number: batchNumber,
       hostel,
       contact_number: contactNumber,
       room_number: roomNumber || null,
@@ -83,7 +89,7 @@ export async function submitOnboarding(
   // Without this, Next.js can serve a cached pre-onboarding render of
   // /dashboard (and /onboarding itself) right after this redirect --
   // showing the stale "not yet onboarded" gate result and bouncing back to
-  // /onboarding in a loop, even though profiles.year was just set.
+  // /onboarding in a loop, even though profiles.batch_number was just set.
   revalidatePath("/", "layout");
 
   redirect("/dashboard");

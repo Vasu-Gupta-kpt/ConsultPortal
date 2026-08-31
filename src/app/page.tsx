@@ -47,10 +47,10 @@ const features = [
     icon: Users,
     title: "Peer Practice",
     description:
-      "Find batchmates and seniors on campus for mock interviews. Filter by year, specialization, and book available time slots.",
+      "Find batchmates and seniors on campus for mock interviews. Filter by batch, specialization, and book available time slots.",
     cta: "Find Partners",
     highlights: [
-      "Filter by year",
+      "Filter by batch",
       "Book available slots instantly",
       "Ask for new slots",
     ],
@@ -69,7 +69,7 @@ export default async function HomePage({
   // Signed-in visitors never see the marketing page -- straight into the
   // app (or back to whatever deep link they followed here, if any).
   // /dashboard's (app)/layout.tsx gate takes it from there: bounces to
-  // /onboarding if profiles.year is still null, otherwise shows the real
+  // /onboarding if profiles.batch_number is still null, otherwise shows the real
   // dashboard. This is what actually funnels a first-time signup into
   // filling out their profile, rather than leaving them stranded here.
   const supabase = await createClient();

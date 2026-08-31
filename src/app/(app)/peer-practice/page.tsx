@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { AvailabilitySlotRow, ProfileRow } from "@/lib/types";
+import type { AvailabilitySlotRow, ProfileRow, Program } from "@/lib/types";
 import { toDateInputValue } from "@/lib/utils";
 import PeerPracticeBrowser, { type PeerListItem } from "./PeerPracticeBrowser";
 
@@ -20,7 +20,7 @@ export default async function PeerPracticePage() {
     supabase
       .from("profiles")
       .select("*, availability_slots(*)")
-      .not("year", "is", null)
+      .not("batch_number", "is", null)
       .neq("id", user.id)
       .filter("availability_slots.slot_date", "gte", todayIso)
       .order("full_name"),
@@ -43,7 +43,8 @@ export default async function PeerPracticePage() {
     .map((p) => ({
       id: p.id,
       name: p.full_name ?? p.email,
-      year: p.year as 1 | 2,
+      program: p.program as Program,
+      batchNumber: p.batch_number as number,
       hostel: p.hostel ?? "",
       specialization: p.specialization,
       bio: p.bio ?? "",

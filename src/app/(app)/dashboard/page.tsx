@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/server";
 import type { CaseRow, Difficulty } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, batchLabel } from "@/lib/utils";
 
 const difficultyColors: Record<Difficulty, string> = {
   Easy: "text-emerald-600 bg-emerald-50 border-emerald-200",
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
 
   const [{ data: profile }, { data: allCases }, { data: mySolves }, { data: leaderboardRows }, { data: streak }] =
     await Promise.all([
-      supabase.from("profiles").select("full_name, year").eq("id", user.id).single(),
+      supabase.from("profiles").select("full_name, program, batch_number").eq("id", user.id).single(),
       supabase.from("cases").select("id, difficulty"),
       supabase
         .from("case_solves")
@@ -85,7 +85,10 @@ export default async function DashboardPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-0.5">My Dashboard</h1>
         <p className="text-muted-foreground text-sm">
-          {profile?.full_name ?? user.email} &bull; PGP Year {profile?.year}
+          {profile?.full_name ?? user.email}
+          {profile?.program && profile?.batch_number
+            ? ` • ${batchLabel(profile.program, profile.batch_number)}`
+            : ""}
         </p>
       </div>
 

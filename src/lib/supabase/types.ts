@@ -136,9 +136,10 @@ export type Database = {
       case_comments: {
         Row: {
           approach_title: string
+          author_batch_number: number | null
           author_id: string | null
           author_name: string
-          author_year: number | null
+          author_program: Database["public"]["Enums"]["program"] | null
           case_id: string
           content: string
           created_at: string
@@ -146,9 +147,10 @@ export type Database = {
         }
         Insert: {
           approach_title: string
+          author_batch_number?: number | null
           author_id?: string | null
           author_name: string
-          author_year?: number | null
+          author_program?: Database["public"]["Enums"]["program"] | null
           case_id: string
           content: string
           created_at?: string
@@ -156,9 +158,10 @@ export type Database = {
         }
         Update: {
           approach_title?: string
+          author_batch_number?: number | null
           author_id?: string | null
           author_name?: string
-          author_year?: number | null
+          author_program?: Database["public"]["Enums"]["program"] | null
           case_id?: string
           content?: string
           created_at?: string
@@ -403,6 +406,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          batch_number: number | null
           bio: string | null
           contact_number: string | null
           created_at: string
@@ -412,16 +416,17 @@ export type Database = {
           hostel: Database["public"]["Enums"]["hostel"] | null
           id: string
           is_admin: boolean
+          program: Database["public"]["Enums"]["program"] | null
           rating: number | null
           review_count: number
           room_number: string | null
           specialization: string | null
           tags: string[]
           updated_at: string
-          year: number | null
         }
         Insert: {
           avatar_url?: string | null
+          batch_number?: number | null
           bio?: string | null
           contact_number?: string | null
           created_at?: string
@@ -431,16 +436,17 @@ export type Database = {
           hostel?: Database["public"]["Enums"]["hostel"] | null
           id: string
           is_admin?: boolean
+          program?: Database["public"]["Enums"]["program"] | null
           rating?: number | null
           review_count?: number
           room_number?: string | null
           specialization?: string | null
           tags?: string[]
           updated_at?: string
-          year?: number | null
         }
         Update: {
           avatar_url?: string | null
+          batch_number?: number | null
           bio?: string | null
           contact_number?: string | null
           created_at?: string
@@ -450,13 +456,13 @@ export type Database = {
           hostel?: Database["public"]["Enums"]["hostel"] | null
           id?: string
           is_admin?: boolean
+          program?: Database["public"]["Enums"]["program"] | null
           rating?: number | null
           review_count?: number
           room_number?: string | null
           specialization?: string | null
           tags?: string[]
           updated_at?: string
-          year?: number | null
         }
         Relationships: []
       }
@@ -619,6 +625,7 @@ export type Database = {
         | "Energy"
         | "Telecom"
       material_category: "Framework" | "Industry Note" | "Skill" | "Casebook"
+      program: "PGP" | "MBA-EX" | "Other"
       slot_location: "NH" | "OH" | "Annexe" | "Library" | "LVH" | "Tagore"
       weekday:
         | "Monday"
@@ -790,6 +797,7 @@ export const Constants = {
         "Telecom",
       ],
       material_category: ["Framework", "Industry Note", "Skill", "Casebook"],
+      program: ["PGP", "MBA-EX", "Other"],
       slot_location: ["NH", "OH", "Annexe", "Library", "LVH", "Tagore"],
       weekday: [
         "Monday",

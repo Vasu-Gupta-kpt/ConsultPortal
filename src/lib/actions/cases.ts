@@ -61,8 +61,8 @@ export async function postApproach(
       author_id: user.id,
       approach_title: approachTitle.trim(),
       content: content.trim(),
-      // author_name/author_year get overwritten by the
-      // set_case_comment_author_snapshot trigger from the author's profile.
+      // author_name/author_program/author_batch_number get overwritten by
+      // the set_case_comment_author_snapshot trigger from the author's profile.
       author_name: "",
     })
     .select()

@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { updateProfile } from "@/lib/actions/profile";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { PROGRAMS } from "@/lib/constants";
 import type { Hostel, ProfileRow } from "@/lib/types";
 
 const HOSTELS: Hostel[] = [
@@ -34,7 +34,6 @@ function SaveButton() {
 
 export default function ProfileEditor({ profile }: { profile: ProfileRow }) {
   const [state, formAction] = useActionState(updateProfile, null);
-  const [year, setYear] = useState<1 | 2>(profile.year ?? 1);
 
   return (
     <Card>
@@ -43,26 +42,38 @@ export default function ProfileEditor({ profile }: { profile: ProfileRow }) {
       </CardHeader>
       <CardContent>
         <form action={formAction} className="space-y-5">
-          <input type="hidden" name="year" value={year} />
-
-          <div>
-            <Label className="mb-2">Year</Label>
-            <div className="flex gap-2">
-              {([1, 2] as const).map((y) => (
-                <button
-                  key={y}
-                  type="button"
-                  onClick={() => setYear(y)}
-                  className={cn(
-                    "flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-                    year === y
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-primary/40"
-                  )}
-                >
-                  Year {y}
-                </button>
-              ))}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="program">Program</Label>
+              <select
+                id="program"
+                name="program"
+                required
+                defaultValue={profile.program ?? ""}
+                className={selectClass}
+              >
+                <option value="" disabled>
+                  Select
+                </option>
+                {PROGRAMS.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="batch_number">Batch Number</Label>
+              <Input
+                id="batch_number"
+                name="batch_number"
+                type="number"
+                min={1}
+                step={1}
+                defaultValue={profile.batch_number ?? ""}
+                placeholder="e.g. 63"
+                required
+              />
             </div>
           </div>
 

@@ -19,7 +19,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { cn, getPublicStorageUrl } from "@/lib/utils";
+import { cn, getPublicStorageUrl, batchLabel } from "@/lib/utils";
 import type {
   CaseCommentRow,
   CaseRow,
@@ -239,9 +239,9 @@ export default function CaseDetailView({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-sm font-medium">{comment.author_name}</span>
-                            {comment.author_year && (
+                            {comment.author_program && comment.author_batch_number && (
                               <Badge variant="outline" className="text-xs">
-                                Year {comment.author_year}
+                                {batchLabel(comment.author_program, comment.author_batch_number)}
                               </Badge>
                             )}
                             <span className="text-xs text-muted-foreground ml-auto">

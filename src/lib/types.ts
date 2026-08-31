@@ -49,6 +49,11 @@ export type Weekday =
   | "Saturday"
   | "Sunday";
 
+// "Other" is a permanent catch-all -- a student from an unlisted program is
+// never a hard blocker, and named programs can be added later with a small
+// migration whenever actually needed (see supabase/migrations/*_program_batch_number.sql).
+export type Program = "PGP" | "MBA-EX" | "Other";
+
 // Row shapes -- hand-written mirrors of the Postgres tables (see
 // supabase/migrations/). Once `npm run db:types` has been run against a
 // migrated database, these can be replaced with
@@ -59,7 +64,8 @@ export interface ProfileRow {
   email: string;
   full_name: string | null;
   avatar_url: string | null;
-  year: 1 | 2 | null;
+  program: Program | null;
+  batch_number: number | null;
   hostel: Hostel | null;
   specialization: string | null;
   bio: string | null;
@@ -115,7 +121,8 @@ export interface CaseCommentRow {
   case_id: string;
   author_id: string | null;
   author_name: string;
-  author_year: number | null;
+  author_program: Program | null;
+  author_batch_number: number | null;
   approach_title: string;
   content: string;
   created_at: string;
