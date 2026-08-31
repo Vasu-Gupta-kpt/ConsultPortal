@@ -626,7 +626,14 @@ export type Database = {
         | "Telecom"
       material_category: "Framework" | "Industry Note" | "Skill" | "Casebook"
       program: "PGP" | "MBA-EX" | "Other"
-      slot_location: "NH" | "OH" | "Annexe" | "Library" | "LVH" | "Tagore"
+      slot_location:
+        | "NH"
+        | "OH"
+        | "Annexe"
+        | "Library"
+        | "LVH"
+        | "Tagore"
+        | "Online"
       weekday:
         | "Monday"
         | "Tuesday"
@@ -798,7 +805,15 @@ export const Constants = {
       ],
       material_category: ["Framework", "Industry Note", "Skill", "Casebook"],
       program: ["PGP", "MBA-EX", "Other"],
-      slot_location: ["NH", "OH", "Annexe", "Library", "LVH", "Tagore"],
+      slot_location: [
+        "NH",
+        "OH",
+        "Annexe",
+        "Library",
+        "LVH",
+        "Tagore",
+        "Online",
+      ],
       weekday: [
         "Monday",
         "Tuesday",

@@ -29,7 +29,7 @@ export type MaterialCategory = "Framework" | "Industry Note" | "Skill" | "Casebo
 
 export type FileType = "PDF" | "Video" | "Article";
 
-export type SlotLocation = "NH" | "OH" | "Annexe" | "Library" | "LVH" | "Tagore";
+export type SlotLocation = "NH" | "OH" | "Annexe" | "Library" | "LVH" | "Tagore" | "Online";
 
 export type Hostel =
   | "New Hostel"

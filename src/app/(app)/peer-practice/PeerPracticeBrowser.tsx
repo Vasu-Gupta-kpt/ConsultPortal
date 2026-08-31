@@ -66,7 +66,7 @@ function batchKey(program: Program, batchNumber: number): string {
 
 type BatchOption = { key: string; label: string; program: Program; batchNumber: number };
 
-const LOCATIONS: SlotLocation[] = ["NH", "OH", "Annexe", "Library", "LVH", "Tagore"];
+const LOCATIONS: SlotLocation[] = ["NH", "OH", "Annexe", "Library", "LVH", "Tagore", "Online"];
 
 const TIME_BUCKETS: { label: TimeBucket; range: string }[] = [
   { label: "Morning", range: "6–12" },

@@ -15,7 +15,7 @@ import { createAvailabilitySlot } from "@/lib/actions/peer-practice";
 import type { SlotLocation } from "@/lib/types";
 import { formatDateLabel, slotsOverlap, toDateInputValue } from "@/lib/utils";
 
-const LOCATIONS: SlotLocation[] = ["NH", "OH", "Annexe", "Library", "LVH", "Tagore"];
+const LOCATIONS: SlotLocation[] = ["NH", "OH", "Annexe", "Library", "LVH", "Tagore", "Online"];
 
 const selectClass =
   "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
