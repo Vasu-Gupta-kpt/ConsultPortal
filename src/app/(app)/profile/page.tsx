@@ -102,11 +102,13 @@ export default async function ProfilePage() {
     })
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  // Past slots nobody ever booked are just clutter -- drop them from "My
-  // Availability". A past slot that WAS booked stays (still relevant: it's
-  // what the confirmed-session history/contact info refers to).
+  // Past-dated items are just clutter once their time has passed -- drop
+  // them from "My Availability" and "My Requests" entirely, regardless of
+  // booking/request status. Past confirmed sessions still show separately
+  // in "My Calendar" (built from the unfiltered mySlots/myBookings below),
+  // so nothing actually disappears -- it's just not duplicated here too.
   const todayIso = toDateInputValue(new Date());
-  const visibleSlots = mySlots.filter((s) => s.date >= todayIso || s.bookings.length > 0);
+  const visibleSlots = mySlots.filter((s) => s.date >= todayIso);
 
   const myBookings: OutgoingBooking[] = ((myBookingsRaw ?? []) as unknown as OutgoingBookingRow[])
     .filter((b) => b.availability_slots !== null)
@@ -124,6 +126,8 @@ export default async function ProfilePage() {
         status: b.status,
       };
     });
+
+  const visibleBookings = myBookings.filter((b) => b.date >= todayIso);
 
   const incomingSlotRequests: IncomingSlotRequest[] = (
     (slotRequestsRaw ?? []) as unknown as IncomingSlotRequestRow[]
@@ -175,7 +179,7 @@ export default async function ProfilePage() {
       <MyCalendar sessions={confirmedSessions} />
       <SlotRequestsInbox requests={incomingSlotRequests} />
       <AvailabilityManager slots={visibleSlots} />
-      <MyBookings bookings={myBookings} />
+      <MyBookings bookings={visibleBookings} />
     </div>
   );
 }
