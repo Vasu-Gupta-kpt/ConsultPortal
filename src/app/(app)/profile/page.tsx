@@ -177,8 +177,15 @@ export default async function ProfilePage() {
       </div>
       <ProfileEditor profile={profile as ProfileRow} />
       <MyCalendar sessions={confirmedSessions} />
-      <SlotRequestsInbox requests={incomingSlotRequests} />
-      <AvailabilityManager slots={visibleSlots} />
+      <SlotRequestsInbox
+        requests={incomingSlotRequests}
+        existingSlots={mySlots.map((s) => ({ date: s.date, startTime: s.startTime, endTime: s.endTime }))}
+      />
+      {/* key forces a remount whenever the slot id set changes -- otherwise
+          AvailabilityManager's own useState(initialSlots) would keep
+          showing stale data after a slot is created from SlotRequestsInbox
+          above (a sibling component's mutation, not one of its own). */}
+      <AvailabilityManager key={visibleSlots.map((s) => s.id).join(",")} slots={visibleSlots} />
       <MyBookings bookings={visibleBookings} />
     </div>
   );

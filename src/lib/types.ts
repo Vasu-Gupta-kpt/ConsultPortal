@@ -161,7 +161,7 @@ export interface BookingRow {
   google_event_id: string | null;
 }
 
-export type SlotRequestStatus = "pending" | "dismissed";
+export type SlotRequestStatus = "pending" | "dismissed" | "fulfilled";
 
 export interface SlotRequestRow {
   id: string;

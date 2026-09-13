@@ -558,6 +558,30 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      fulfill_slot_request: {
+        Args: {
+          p_end_time: string
+          p_location: Database["public"]["Enums"]["slot_location"]
+          p_request_id: string
+          p_slot_date: string
+          p_start_time: string
+        }
+        Returns: {
+          booked_at: string
+          booked_by: string
+          cancelled_at: string | null
+          google_event_id: string | null
+          id: string
+          slot_id: string
+          status: Database["public"]["Enums"]["booking_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       leaderboard: {
         Args: never
         Returns: {

@@ -408,3 +408,82 @@ export async function dismissSlotRequest(requestId: string): Promise<SimpleResul
   revalidatePath("/profile");
   return { success: true };
 }
+
+// Fulfills an incoming slot_requests row directly: creates the slot AND
+// immediately confirms it with the original requester in one step, skipping
+// the normal request -> accept round trip. See
+// supabase/migrations/*_fulfill_slot_request.sql for the RPC this calls --
+// it looks up requested_by itself from the request row, so all we need here
+// is the request id.
+export async function fulfillSlotRequest(
+  requestId: string,
+  date: string,
+  startTime: string,
+  endTime: string,
+  location: SlotLocation
+): Promise<RequestResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in" };
+
+  const { data: booking, error } = await supabase.rpc("fulfill_slot_request", {
+    p_request_id: requestId,
+    p_slot_date: date,
+    p_start_time: startTime,
+    p_end_time: endTime,
+    p_location: location,
+  });
+  if (error || !booking) {
+    // 23P01 = exclusion_violation -- same clash mapping createAvailabilitySlot
+    // uses; the client already pre-checks this, this is the race backstop.
+    if (error?.code === "23P01") {
+      return { error: "This clashes with a slot you've already listed." };
+    }
+    return { error: error?.message ?? "Failed to add and book this slot." };
+  }
+
+  const [{ data: ownerProfile }, { data: requesterProfile }] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+    supabase
+      .from("profiles")
+      .select("email, contact_number, full_name")
+      .eq("id", booking.booked_by)
+      .single(),
+  ]);
+
+  let whatsappLink: string | null = null;
+  const slot = { slot_date: date, start_time: startTime, end_time: endTime, location };
+
+  if (requesterProfile) {
+    const ownerName = ownerProfile?.full_name ?? "Your practice partner";
+    const slotDescription = formatSlot(slot);
+    const message = `Hi! ${ownerName} added a Peer Practice slot for you on ${slotDescription}. See you then!`;
+
+    void sendEmail({
+      to: requesterProfile.email,
+      subject: "Consulting Portal - Your Peer Practice slot request was fulfilled",
+      html: `<p><strong>${ownerName}</strong> added a slot for your request on ${slotDescription} and it's already confirmed.</p><p><a href="${siteUrl("/profile")}">View it on your profile</a>.</p>`,
+    });
+
+    if (requesterProfile.contact_number) {
+      whatsappLink = buildWhatsAppLink(requesterProfile.contact_number, message);
+    }
+
+    const eventId = await tryCreateCalendarEvent({
+      ownerId: user.id,
+      attendeeEmail: requesterProfile.email,
+      summary: `Peer Practice: ${ownerName} x ${requesterProfile.full_name ?? "classmate"}`,
+      slot,
+    });
+    if (eventId) {
+      const admin = createAdminClient();
+      await admin.from("bookings").update({ google_event_id: eventId }).eq("id", booking.id);
+    }
+  }
+
+  revalidatePath("/peer-practice");
+  revalidatePath("/profile");
+  return { success: true, whatsappLink };
+}
