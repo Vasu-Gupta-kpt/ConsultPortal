@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock,
   Building2,
+  BookOpen,
   Filter,
   SlidersHorizontal,
   Trash2,
@@ -72,6 +73,7 @@ export default function CasesBrowser({
   const [selectedTypes, setSelectedTypes] = useState<CaseType[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
+  const [selectedCasebooks, setSelectedCasebooks] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CaseListItem | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -98,6 +100,17 @@ export default function CasesBrowser({
     });
   }
 
+  // Built from whatever cases actually exist rather than a hardcoded list --
+  // casebook is free text (unlike difficulty/type), so a new casebook name
+  // just shows up here automatically, no code change needed.
+  const casebooks = useMemo(
+    () =>
+      [...new Set(caseItems.map((c) => c.casebook).filter((c): c is string => !!c))].sort((a, b) =>
+        a.localeCompare(b)
+      ),
+    [caseItems]
+  );
+
   const filtered = useMemo(() => {
     return caseItems.filter((c) => {
       if (search && !c.title.toLowerCase().includes(search.toLowerCase())) return false;
@@ -105,15 +118,25 @@ export default function CasesBrowser({
       if (selectedTypes.length && !selectedTypes.includes(c.type)) return false;
       if (selectedIndustries.length && !selectedIndustries.includes(c.industry)) return false;
       if (selectedCompanies.length && !selectedCompanies.includes(c.company)) return false;
+      if (selectedCasebooks.length && (!c.casebook || !selectedCasebooks.includes(c.casebook))) return false;
       return true;
     });
-  }, [caseItems, search, selectedDifficulties, selectedTypes, selectedIndustries, selectedCompanies]);
+  }, [
+    caseItems,
+    search,
+    selectedDifficulties,
+    selectedTypes,
+    selectedIndustries,
+    selectedCompanies,
+    selectedCasebooks,
+  ]);
 
   const activeFiltersCount =
     selectedDifficulties.length +
     selectedTypes.length +
     selectedIndustries.length +
-    selectedCompanies.length;
+    selectedCompanies.length +
+    selectedCasebooks.length;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -193,6 +216,17 @@ export default function CasesBrowser({
                   selected={selectedCompanies}
                   onToggle={(v) => setSelectedCompanies(toggle(selectedCompanies, v))}
                 />
+                {casebooks.length > 0 && (
+                  <>
+                    <Separator />
+                    <FilterSection
+                      title="Casebook"
+                      items={casebooks}
+                      selected={selectedCasebooks}
+                      onToggle={(v) => setSelectedCasebooks(toggle(selectedCasebooks, v))}
+                    />
+                  </>
+                )}
                 {activeFiltersCount > 0 && (
                   <>
                     <Separator />
@@ -205,6 +239,7 @@ export default function CasesBrowser({
                         setSelectedTypes([]);
                         setSelectedIndustries([]);
                         setSelectedCompanies([]);
+                        setSelectedCasebooks([]);
                       }}
                     >
                       Clear all filters
@@ -270,6 +305,12 @@ export default function CasesBrowser({
                             <Building2 className="h-3 w-3" />
                             {c.company}
                           </span>
+                          {c.casebook && (
+                            <span className="flex items-center gap-1">
+                              <BookOpen className="h-3 w-3" />
+                              {c.casebook}
+                            </span>
+                          )}
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {c.estimated_time}m
